@@ -673,38 +673,25 @@ void ReadIntI04(void)
         fStart = false; // we update with an interrupt leg but we need to get start status
         if (!OrTcaReadInput(cpSwU78.address, cpSwU78.ch, &i2cArray[I2C1_77].val))
         {
-            if (f9408){
-                mainAndCb.ups3          = !i2cArray[I2C1_77].P5;
-                mainAndCb._3pPlatform   = !i2cArray[I2C1_77].P6;
-                mainAndCb.ups1          = !i2cArray[I2C1_77].P7;
-                mainAndCb.ups2          = !i2cArray[I2C1_77].P10;
-                mainAndCb._1pPlatform   = !i2cArray[I2C1_77].P11;
-                mainAndCb.ups4          = !i2cArray[I2C1_77].P12;
-                switches.lampTest       = !i2cArray[I2C1_77].P13;
-                mainAndCb.main          = i2cArray[I2C1_77].P14; 
-                RegsTable[Regs_3pPhase] = i2cArray[I2C1_77].P15;
-                RegsTable[Regs_MainAndCB] = (mainAndCb.val & 0x7F);
-                
-                extStatus.pcmMainOnOff  = !i2cArray[I2C1_77].P0;
-                extStatus.pqapErase     = !i2cArray[I2C1_77].P1;
-                extStatus.pqapBattle    = i2cArray[I2C1_77].P2;
-                extStatus.pqapMainOnOff = !i2cArray[I2C1_77].P3;
-                extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
-                RegsTable[Regs_ExtStatus] = extStatus.val;
-                SYS_CONSOLE_PRINT("I2C1_77, ExtStatus, pqapErase:: 0x%X, 0x%X, %u\r\n", i2cArray[I2C1_77].val, RegsTable[Regs_ExtStatus], extStatus.pqapErase);
-                sc16Status.battleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle; 
-            }
-            else if (f9800)
-            {
-                mainAndCbEn._3pPlatform = !i2cArray[I2C1_77].P5;
-                mainAndCbEn.main        = i2cArray[I2C1_77].P14;
-                switchesEn.lampTest     = !i2cArray[I2C1_77].P13;
-                RegsTable[Regs_3pPhase_En] = i2cArray[I2C1_77].P15; 
-                RegsTable[Regs_MainAndCB_En] = mainAndCbEn.val;
-            }
-            
-            
-            
+            mainAndCb.ups3          = !i2cArray[I2C1_77].P5;
+            mainAndCb._3pPlatform   = !i2cArray[I2C1_77].P6;
+            mainAndCb.ups1          = !i2cArray[I2C1_77].P7;
+            mainAndCb.ups2          = !i2cArray[I2C1_77].P10;
+            mainAndCb._1pPlatform   = !i2cArray[I2C1_77].P11;
+            mainAndCb.ups4          = !i2cArray[I2C1_77].P12;
+            switches.lampTest       = !i2cArray[I2C1_77].P13;
+            mainAndCb.main          = i2cArray[I2C1_77].P14; 
+            //RegsTable[Regs_3pPhase] = i2cArray[I2C1_77].P15;
+            RegsTable[Regs_MainAndCB] = (mainAndCb.val & 0x7F);
+
+            extStatus.pcmMainOnOff  = !i2cArray[I2C1_77].P0;
+            extStatus.pqapErase     = !i2cArray[I2C1_77].P1;
+            extStatus.pqapBattle    = i2cArray[I2C1_77].P2;
+            extStatus.pqapMainOnOff = !i2cArray[I2C1_77].P3;
+            extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
+            RegsTable[Regs_ExtStatus] = extStatus.val;
+            SYS_CONSOLE_PRINT("I2C1_77, ExtStatus, pqapErase:: 0x%X, 0x%X, %u\r\n", i2cArray[I2C1_77].val, RegsTable[Regs_ExtStatus], extStatus.pqapErase);
+            sc16Status.battleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;      
         }
         
     }
@@ -1171,10 +1158,10 @@ void OpSsr(void)
 
 void CheckSys(bool virtChange)
 {
-    const uint8_t Table208V[] = {Regs_3pL1V, Regs_3pL2V, Regs_3pL3V};
-    const uint8_t Table115V[] = {Regs_1pV, Regs_Ups1V, Regs_Ups2V, Regs_Ups3V, Regs_Ups4V};
-    const uint8_t Table60Hz[] = {Regs_3pL1F, Regs_3pL2F, Regs_3pL3F, Regs_1pF, 
-                                Regs_Ups1F, Regs_Ups2F, Regs_Ups3F, Regs_Ups4F};
+    //const uint8_t Table208V[] = {Regs_3pL1V, Regs_3pL2V, Regs_3pL3V};
+    const uint8_t Table115V[] = {Regs_UpsV, Regs_DirectV, Regs_Ups2V, Regs_Ups3V, Regs_Ups4V};
+    const uint8_t Table60Hz[] = {/*Regs_3pL1F, Regs_3pL2F, Regs_3pL3F, */Regs_UpsF, 
+                                Regs_DirectF, Regs_Ups2F, Regs_Ups3F, Regs_Ups4F};
     const uint8_t Table28V[] =  {Regs_HeuV, Regs_EsrAV, Regs_EsrBV, Regs_Ps4V};
     const uint8_t TableA[] = TABLE_A;
     const uint8_t TableALimit[] = TABLE_A_LIMIT;
@@ -1192,16 +1179,16 @@ void CheckSys(bool virtChange)
     if (f9408){
         
         //Over Under voltage 
-        for (i=0; i< sizeof(Table208V); i++)
-            if ((RegsTable[Table208V[i]] < LIMIT_208V_L)||(RegsTable[Table208V[i]] > LIMIT_208V_H))
-            {
-                ind = true;
-                break;
-            }
-        overUnderVolt._3pPlatform = ind;
-        phaseStatus._3p1 = (RegsTable[Table208V[0]] < LIMIT_LIVE_PH);
-        phaseStatus._3p2 = (RegsTable[Table208V[1]] < LIMIT_LIVE_PH);
-        phaseStatus._3p3 = (RegsTable[Table208V[2]] < LIMIT_LIVE_PH);
+//        for (i=0; i< sizeof(Table208V); i++)
+//            if ((RegsTable[Table208V[i]] < LIMIT_208V_L)||(RegsTable[Table208V[i]] > LIMIT_208V_H))
+//            {
+//                ind = true;
+//                break;
+//            }
+//        overUnderVolt._3pPlatform = ind;
+//        phaseStatus._3p1 = (RegsTable[Table208V[0]] < LIMIT_LIVE_PH);
+//        phaseStatus._3p2 = (RegsTable[Table208V[1]] < LIMIT_LIVE_PH);
+//        phaseStatus._3p3 = (RegsTable[Table208V[2]] < LIMIT_LIVE_PH);
         RegsTable[Regs_3PhaseStatus] = phaseStatus.val;
         ind = false;
         
@@ -1211,8 +1198,8 @@ void CheckSys(bool virtChange)
                 ind = true;
                 lastIdx = i;
             }
-            overUnderVolt._1pPlatform = (Table115V[i] == Regs_1pV)? (lastIdx == i): overUnderVolt._1pPlatform;
-            overUnderVolt.ups1 = (Table115V[i] == Regs_Ups1V)? (lastIdx == i): overUnderVolt.ups1;
+            overUnderVolt._1pPlatform = (Table115V[i] == Regs_UpsV)? (lastIdx == i): overUnderVolt._1pPlatform;
+            overUnderVolt.ups1 = (Table115V[i] == Regs_DirectV)? (lastIdx == i): overUnderVolt.ups1;
             overUnderVolt.ups2 = (Table115V[i] == Regs_Ups2V)? (lastIdx == i): overUnderVolt.ups2;
             overUnderVolt.ups3 = (Table115V[i] == Regs_Ups3V)? (lastIdx == i): overUnderVolt.ups3;
             overUnderVolt.ups4 = (Table115V[i] == Regs_Ups4V)? (lastIdx == i): overUnderVolt.ups4;
@@ -1832,393 +1819,245 @@ void ReadProc(void)
         readState = 0;
         return;
     }
-    if (f9408){
-        switch(readState)
-        {
-            case 0:
-                readState = 1;
-                break;
-            case 1:
-                UpdateMuxConfig2(0,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 2: // AN P = 0, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_ArduL1A, AN1, a_0p08);
-                //ReadCalc(Regs_EsmA, AN2, a_0p08c_2); //C_ECM
-                ReadCalc(Regs_3pL1V, AN3, a_0p18);
-                ReadCalc(Regs_Isometer, AN5, a_0p0723);
-                ReadCalc(Regs_HeuV, AN7, a_0p0198b_1650);
-                //SYS_CONSOLE_PRINT("an, calc: %u, %u\r\n", an, RegsTable[Regs_3pL1V_En]);
-                leakage = (RegsTable[Regs_Isometer] < LIMIT_LEAK);
-                leakageCritic = (RegsTable[Regs_Isometer] < LIMIT_LEAK_CRT);
-                if (leakageCritic)
-                {
-                    RegsTable[Regs_CtrlSsr] = 0;
-                    UpdateSsr(0);
-                }
-                if (isoState){
-                    readDly = 100;
-                    readState = 2;
-                }
-                else{
-                    UpdateMuxConfig2(1,0,3);
-                    readDly = 500;
-                    readState++; 
-                }
-                break;          
-            case 3: // AN P = 1, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Ups1EsubA, AN1, a_0p08c_3);
-                ReadCalc(Regs_Occ1A, AN2, a_0p08c_2);
-                ReadCalc(Regs_3pL2V, AN3, a_0p18);
-                ReadCalc(Regs_TempEsrA_U, AN5, a_0p0322b_1650);
-                ReadCalc(Regs_TempEsrC_F, AN6, a_0p0322b_1650);
-                ReadCalc(Regs_EsrAV, AN7, a_0p0198b_1650);
-                UpdateMuxConfig2(2,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 4: // AN P = 2, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Ups2EsrA_A, AN2, a_0p08);             
-                ReadCalc(Regs_3pL3V, AN3, a_0p18);
-                ReadCalc(Regs_Occ3A, AN4, a_0p08c_2);
-                ReadCalc(Regs_TempEsrA_F, AN5, a_0p0322b_1650);
-                ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
-                ReadCalc(Regs_Ps4V, AN7, a_0p0198b_1650);
-                UpdateMuxConfig2(3,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 5: // AN P = 3, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_EsrA6KwA, AN1, a_0p08);
-                ReadCalc(Regs_1pV, AN3, a_0p18);
-                ReadCalc(Regs_Dfc12L1A, AN4, a_0p08c_3);
-                ReadCalc(Regs_TempEsrA_D, AN5, a_0p0322b_1650);
-                ReadCalc(Regs_TempEsrD_U, AN6, a_0p0322b_1650);
-                ReadCalc(Regs_EsrBV, AN7, a_0p0198b_1650);
-                UpdateMuxConfig2(4,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 6: // AN P = 4, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Ups2OccA, AN2, a_0p08c_2);
-                ReadCalc(Regs_Ups1V, AN3, a_0p18);
-                ReadCalc(Regs_Occ2A, AN4, a_0p08c_2); 
-                ReadCalc(Regs_TempEsrB_U, AN5, a_0p0322b_1650);
-                ReadCalc(Regs_TempEsrD_F, AN6, a_0p0322b_1650);
-                UpdateMuxConfig2(5,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 7: // AN P = 5, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Ups1EsrA_A, AN2, a_0p08);
-                ReadCalc(Regs_Ups2V, AN3, a_0p18);
-                ReadCalc(Regs_TempEsrB_D, AN5, a_0p0322b_1650);
-                ReadCalc(Regs_TempEsrD_D, AN6, a_0p0322b_1650);
-                UpdateMuxConfig2(6,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 8: // AN P = 6, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_EsrB6KwA, AN1, a_0p08);
-                ReadCalc(Regs_Ups3V, AN3, a_0p18);
-                ReadCalc(Regs_ServiceA, AN4, a_0p08c_2);
-                ReadCalc(Regs_TempEsrB_F, AN5, a_0p0322b_1650);
-                UpdateMuxConfig2(7,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 9: // AN P = 7, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Ups4V, AN3, a_0p18);
-                ReadCalc(Regs_AfeA, AN2, a_0p08);
-                ReadCalc(Regs_TempEsrC_U, AN5, a_0p0322b_1650);
-                UpdateMuxConfig2(0,2,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 10: // AN P = 0, PROC P = 2 
-                if (readDly) break;
-                ReadCalc(Regs_EsmA, AN2, a_0p08b_X6c_2); //C_ECM
-                UpdateMuxConfig2(0,8,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 11: // AN P = 0, PROC P = 8 
-                if (readDly) break;
-                ReadCalc(Regs_Isometer3p, AN4, a_0p0723);
-                leakage2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK);
-                leakageCritic2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK_CRT);
-                if (leakageCritic2)
-                {
-                    RegsTable[Regs_CtrlSsr] = 0;
-                    UpdateSsr(0);
-                }
-                if (isoState2){
-                    readDly = 100;
-                    readState = 11;
-                }
-                else{
-                    UpdateMuxConfig2(3,2,3);
-                    readDly = 100;
-                    readState++; 
-                }
-                break;
-            case 12: // AN P = 3, PROC P = 2 
-                if (readDly) break;
-                //ReadCalc(Regs_AbjbA, AN2, a_0p08b_1698c_3);
-                ReadCalc(Regs_AbjbA, AN2, a_0p08b_X5c_3);
-                UpdateMuxConfig2(4,1,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 13: // AN P = 4, PROC P = 1 
-                if (readDly) break;
-                ReadCalc(Regs_HeuA, AN1, a_0p08b_X3);
-                UpdateMuxConfig2(5,1,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 14: // AN P = 5, PROC P = 1 
-                if (readDly) break;
-                ReadCalc(Regs_EsrBPs2A, AN1, a_0p08b_X4);
-                UpdateMuxConfig2(6,2,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 15: // AN P = 6, PROC P = 2 
-                if (readDly) break;
-                ReadCalc(Regs_EsrA28A, AN2, a_0p08b_X2);
-                UpdateMuxConfig2(7,1,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 16: // AN P = 7, PROC P = 1 
-                if (readDly) break;
-                ReadCalc(Regs_HfMonA, AN1, a_0p08b_X1c_3);
-                UpdateMuxConfig2(0,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;
-            case 17: // AN P = 0, PROC P = 0, PROC F = 1
-                if (readDly) break;
-                RegsTable[Regs_3pL1F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(1,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break; 
-            case 18: // AN P = 1, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_3pL2F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(2,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;
-            case 19: // AN P = 2, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_3pL3F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(3,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;
-            case 20: // AN P = 3, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_1pF] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(4,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;    
-            case 21: // AN P = 4, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_Ups1F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(5,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;    
-            case 22: // AN P = 5, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_Ups2F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(6,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;  
-            case 23: // AN P = 6, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_Ups3F] = (capIn == 2)? freq: 0;
-                UpdateMuxConfig2(7,0,1);
-                readDly = 50;
-                capIn = 0;
-                readState++;
-                break;  
-            case 24: // AN P = 7, PROC P = 0, PROC F = 1 
-                if (readDly) break;
-                RegsTable[Regs_Ups4F] = (capIn == 2)? freq: 0;
-                readState = 0;
-                break;  
-            default:
-                break;
-        }
-    }
-    else if (f9800)
+    
+    switch(readState)
     {
-        switch(readState)
-        {
-            case 0:
-                readState = 1;
-                break;
-            case 1:
-                UpdateMuxConfig2(0,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 2: // AN P = 0, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_ArduL1A_En, AN1, a_0p08);
-                ReadCalc(Regs_Dfc4L1A_En, AN2, a_0p08c_3);
-                ReadCalc(Regs_3pL1V_En, AN3, a_0p18);
-                //SYS_CONSOLE_PRINT("an, calc: %u, %u\r\n", an, RegsTable[Regs_3pL1V_En]);
+        case 0:
+            readState = 1;
+            break;
+        case 1:
+            UpdateMuxConfig2(0,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 2: // AN P = 0, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_ArduL1A, AN1, a_0p08);
+            //ReadCalc(Regs_EsmA, AN2, a_0p08c_2); //C_ECM
+            //ReadCalc(Regs_3pL1V, AN3, a_0p18);
+            ReadCalc(Regs_Isometer, AN5, a_0p0723);
+            ReadCalc(Regs_HeuV, AN7, a_0p0198b_1650);
+            //SYS_CONSOLE_PRINT("an, calc: %u, %u\r\n", an, RegsTable[Regs_3pL1V_En]);
+            leakage = (RegsTable[Regs_Isometer] < LIMIT_LEAK);
+            leakageCritic = (RegsTable[Regs_Isometer] < LIMIT_LEAK_CRT);
+            if (leakageCritic)
+            {
+                RegsTable[Regs_CtrlSsr] = 0;
+                UpdateSsr(0);
+            }
+            if (isoState){
+                readDly = 100;
+                readState = 2;
+            }
+            else{
                 UpdateMuxConfig2(1,0,3);
                 readDly = 500;
-                readState++;
-                break;
-            case 3: // AN P = 1, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc4L2A_En, AN2, a_0p08c_3);
-                ReadCalc(Regs_3pL2V_En, AN3, a_0p18);
-                ReadCalc(Regs_ArduL3A_En, AN4, a_0p08);
-                ReadCalc(Regs_HeuV_En, AN7, a_0p0198b_1650);//?
-                UpdateMuxConfig2(2,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 4: // AN P = 2, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_ArduL2A_En, AN1, a_0p08);
-                ReadCalc(Regs_Dfc3L3A_En, AN2, a_0p08c_3);
-                ReadCalc(Regs_3pL3V_En, AN3, a_0p18);
-                ReadCalc(Regs_Dfc1L1A_En, AN4, a_0p08c_3);
-                ReadCalc(Regs_PsV_En, AN7, a_0p0198b_1650);
-
-                UpdateMuxConfig2(3,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 5: // AN P = 3, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc1L3A_En, AN1, a_0p08c_3);
-                ReadCalc(Regs_Dfc2L1A_En, AN4, a_0p08c_3);
-
-                UpdateMuxConfig2(4,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 6: // AN P = 4, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc4L3A_En, AN4, a_0p08c_3);
-                
-                UpdateMuxConfig2(5,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 7: // AN P = 5, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc3L2A_En, AN2, a_0p08c_3);
-                ReadCalc(Regs_Dfc2L2A_En, AN4, a_0p08c_3);
-                UpdateMuxConfig2(6,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 8: // AN P = 6, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc3L1A_En, AN2, a_0p08c_3);
-                ReadCalc(Regs_Dfc1L2A_En, AN4, a_0p08c_3);
-
-                UpdateMuxConfig2(7,0,3);
-                readDly = 500;
-                readState++;
-                break;
-            case 9: // AN P = 7, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Dfc2L3A_En, AN4, a_0p08c_3);
-
+                readState++; 
+            }
+            break;          
+        case 3: // AN P = 1, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_Ups1EsubA, AN1, a_0p08c_3);
+            ReadCalc(Regs_Occ1A, AN2, a_0p08c_2);
+            //ReadCalc(Regs_3pL2V, AN3, a_0p18);
+            ReadCalc(Regs_TempEsrA_U, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrC_F, AN6, a_0p0322b_1650);
+            ReadCalc(Regs_EsrAV, AN7, a_0p0198b_1650);
+            UpdateMuxConfig2(2,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 4: // AN P = 2, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_Ups2EsrA_A, AN2, a_0p08);             
+            //ReadCalc(Regs_3pL3V, AN3, a_0p18);
+            ReadCalc(Regs_Occ3A, AN4, a_0p08c_2);
+            ReadCalc(Regs_TempEsrA_F, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
+            ReadCalc(Regs_Ps4V, AN7, a_0p0198b_1650);
+            UpdateMuxConfig2(3,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 5: // AN P = 3, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_EsrA6KwA, AN1, a_0p08);
+            ReadCalc(Regs_UpsV, AN3, a_0p18);
+            ReadCalc(Regs_Dfc12L1A, AN4, a_0p08c_3);
+            ReadCalc(Regs_TempEsrA_D, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrD_U, AN6, a_0p0322b_1650);
+            ReadCalc(Regs_EsrBV, AN7, a_0p0198b_1650);
+            UpdateMuxConfig2(4,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 6: // AN P = 4, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_Ups2OccA, AN2, a_0p08c_2);
+            ReadCalc(Regs_DirectV, AN3, a_0p18);
+            ReadCalc(Regs_Occ2A, AN4, a_0p08c_2); 
+            ReadCalc(Regs_TempEsrB_U, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrD_F, AN6, a_0p0322b_1650);
+            UpdateMuxConfig2(5,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 7: // AN P = 5, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_Ups1EsrA_A, AN2, a_0p08);
+            ReadCalc(Regs_Ups2V, AN3, a_0p18);
+            ReadCalc(Regs_TempEsrB_D, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrD_D, AN6, a_0p0322b_1650);
+            UpdateMuxConfig2(6,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 8: // AN P = 6, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_EsrB6KwA, AN1, a_0p08);
+            ReadCalc(Regs_Ups3V, AN3, a_0p18);
+            ReadCalc(Regs_ServiceA, AN4, a_0p08c_2);
+            ReadCalc(Regs_TempEsrB_F, AN5, a_0p0322b_1650);
+            UpdateMuxConfig2(7,0,3);
+            readDly = 500;
+            readState++;
+            break;
+        case 9: // AN P = 7, PROC P = 0 
+            if (readDly) break;
+            ReadCalc(Regs_Ups4V, AN3, a_0p18);
+            ReadCalc(Regs_AfeA, AN2, a_0p08);
+            ReadCalc(Regs_TempEsrC_U, AN5, a_0p0322b_1650);
+            UpdateMuxConfig2(0,2,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 10: // AN P = 0, PROC P = 2 
+            if (readDly) break;
+            ReadCalc(Regs_EsmA, AN2, a_0p08b_X6c_2); //C_ECM
+            UpdateMuxConfig2(0,8,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 11: // AN P = 0, PROC P = 8 
+            if (readDly) break;
+            ReadCalc(Regs_Isometer3p, AN4, a_0p0723);
+            leakage2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK);
+            leakageCritic2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK_CRT);
+            if (leakageCritic2)
+            {
+                RegsTable[Regs_CtrlSsr] = 0;
+                UpdateSsr(0);
+            }
+            if (isoState2){
+                readDly = 100;
+                readState = 11;
+            }
+            else{
                 UpdateMuxConfig2(3,2,3);
                 readDly = 100;
-                readState++;
-                break;
-            case 10: // AN P = 3, PROC P = 2 
-                if (readDly) break;
-                ReadCalc(Regs_AbjbA_En, AN2, a_0p08b_X5c_3);
-
-                UpdateMuxConfig2(4,1,3);
-                readDly = 100;
-                readState++;
-                break;
-            case 11: // AN P = 4, PROC P = 1 
-                if (readDly) break;
-                ReadCalc(Regs_HeuA_En, AN1, a_0p08b_X3);
-                
-                UpdateMuxConfig2(0,0,1);
-                readDly = 100;
-                capIn = 0;
-                readState++;
-                break;
-            case 12: // AN P = 0, PROC P = 0 
-                if (readDly) break;
-                RegsTable[Regs_3pL1F_En] = (capIn == 2)? freq: 0;
-
-                UpdateMuxConfig2(1,0,1);
-                readDly = 100;
-                capIn = 0;
-                readState++;
-                break; 
-            case 13: // AN P = 1, PROC P = 0 
-                if (readDly) break;
-                RegsTable[Regs_3pL2F_En] = (capIn == 2)? freq: 0;
-
-                UpdateMuxConfig2(2,0,1);
-                readDly = 100;
-                capIn = 0;
-                readState++;
-                break;
-            case 14: // AN P = 2, PROC P = 0 
-                if (readDly) break;
-                RegsTable[Regs_3pL3F_En] = (capIn == 2)? freq: 0;
-
-                UpdateMuxConfig2(0,8,3);
-                readDly = 100;
-                readState++;
-                break;    
-            case 15: // AN P = 2, PROC P = 0 
-                if (readDly) break;
-                ReadCalc(Regs_Isometer_En, AN4, a_0p0723);
-                leakage = (RegsTable[Regs_Isometer_En] < LIMIT_LEAK);
-                leakageCritic = (RegsTable[Regs_Isometer_En] < LIMIT_LEAK_CRT);
-                if (leakageCritic)
-                {
-                    RegsTable[Regs_CtrlSsr_En] = 0;
-                    UpdateSsr_En(0);
-                }
-
-                //UpdateMuxConfig2(0,0,1);
-                readDly = 100;
-                readState = isoState2? 15: 1;
-                break; 
-            default:
-                break;
-        }
+                readState++; 
+            }
+            break;
+        case 12: // AN P = 3, PROC P = 2 
+            if (readDly) break;
+            //ReadCalc(Regs_AbjbA, AN2, a_0p08b_1698c_3);
+            ReadCalc(Regs_AbjbA, AN2, a_0p08b_X5c_3);
+            UpdateMuxConfig2(4,1,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 13: // AN P = 4, PROC P = 1 
+            if (readDly) break;
+            ReadCalc(Regs_HeuA, AN1, a_0p08b_X3);
+            UpdateMuxConfig2(5,1,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 14: // AN P = 5, PROC P = 1 
+            if (readDly) break;
+            ReadCalc(Regs_EsrBPs2A, AN1, a_0p08b_X4);
+            UpdateMuxConfig2(6,2,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 15: // AN P = 6, PROC P = 2 
+            if (readDly) break;
+            ReadCalc(Regs_EsrA28A, AN2, a_0p08b_X2);
+            UpdateMuxConfig2(7,1,3);
+            readDly = 100;
+            readState++;
+            break;
+        case 16: // AN P = 7, PROC P = 1 
+            if (readDly) break;
+            ReadCalc(Regs_HfMonA, AN1, a_0p08b_X1c_3);
+            UpdateMuxConfig2(3,0,1);
+            readDly = 50;
+            capIn = 0;
+            readState = 20;
+            break;
+        case 17: // AN P = 0, PROC P = 0, PROC F = 1
+//            if (readDly) break;
+//            RegsTable[Regs_3pL1F] = (capIn == 2)? freq: 0;
+//            UpdateMuxConfig2(1,0,1);
+//            readDly = 50;
+//            capIn = 0;
+//            readState++;
+            break; 
+        case 18: // AN P = 1, PROC P = 0, PROC F = 1 
+//            if (readDly) break;
+//            RegsTable[Regs_3pL2F] = (capIn == 2)? freq: 0;
+//            UpdateMuxConfig2(2,0,1);
+//            readDly = 50;
+//            capIn = 0;
+//            readState++;
+            break;
+        case 19: // AN P = 2, PROC P = 0, PROC F = 1 
+//            if (readDly) break;
+//            RegsTable[Regs_3pL3F] = (capIn == 2)? freq: 0;
+//            UpdateMuxConfig2(3,0,1);
+//            readDly = 50;
+//            capIn = 0;
+//            readState++;
+            break;
+        case 20: // AN P = 3, PROC P = 0, PROC F = 1 
+            if (readDly) break;
+            RegsTable[Regs_UpsF] = (capIn == 2)? freq: 0;
+            UpdateMuxConfig2(4,0,1);
+            readDly = 50;
+            capIn = 0;
+            readState++;
+            break;    
+        case 21: // AN P = 4, PROC P = 0, PROC F = 1 
+            if (readDly) break;
+            RegsTable[Regs_DirectF] = (capIn == 2)? freq: 0;
+            UpdateMuxConfig2(5,0,1);
+            readDly = 50;
+            capIn = 0;
+            readState++;
+            break;    
+        case 22: // AN P = 5, PROC P = 0, PROC F = 1 
+            if (readDly) break;
+            RegsTable[Regs_Ups2F] = (capIn == 2)? freq: 0;
+            UpdateMuxConfig2(6,0,1);
+            readDly = 50;
+            capIn = 0;
+            readState++;
+            break;  
+        case 23: // AN P = 6, PROC P = 0, PROC F = 1 
+            if (readDly) break;
+            RegsTable[Regs_Ups3F] = (capIn == 2)? freq: 0;
+            UpdateMuxConfig2(7,0,1);
+            readDly = 50;
+            capIn = 0;
+            readState++;
+            break;  
+        case 24: // AN P = 7, PROC P = 0, PROC F = 1 
+            if (readDly) break;
+            RegsTable[Regs_Ups4F] = (capIn == 2)? freq: 0;
+            readState = 0;
+            break;  
+        default:
+            break;
     }
+    
 }

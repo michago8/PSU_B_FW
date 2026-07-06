@@ -49,6 +49,9 @@
  * 1.2.25 - Fix trail2 of the IO expender reset problem
  * 1.2.26 - Fix trail3 of the IO expender reset problem
  * 1.2.27 - Add pre reset delay
+ * 
+ * PSU-B
+ * 1.0.0 - 
  */
 
 #ifndef ORCONFIG_H
@@ -58,8 +61,8 @@
 extern "C" {
 #endif
 #define VERSION_H 1
-#define VERSION_M 2
-#define VERSION_L 27
+#define VERSION_M 0
+#define VERSION_L 0
 #define KEEP_ALIVE_TIME 120//seconds
 #define OR_BUFFER_SIZE 128
 
