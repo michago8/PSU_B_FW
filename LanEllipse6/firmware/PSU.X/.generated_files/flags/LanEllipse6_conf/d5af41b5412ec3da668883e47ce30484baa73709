@@ -1,0 +1,1 @@
+$(MP_EXTRA_AS_PRE)  -c -mprocessor=$(MP_PROCESSOR_OPTION) -DXPRJ_LanEllipse6_conf=$(CND_CONF)    -Wa,--defsym=__MPLAB_BUILD=1$(MP_EXTRA_AS_POST),--gdwarf-2 -mdfp="${DFP_DIR}"C:\Users\Michael\Dropbox\Projlocal\Ellipse\PSU_B\FW\PSU_B\LanEllipse6\firmware\src\config\LanEllipse6_conf\library\tcpip\src\tcpip_helper_c32.S
