@@ -85,7 +85,7 @@ static Switches switches = {.val = 0};
 static Switches_En switchesEn = {.val = 0};
 static SysErrors_En sysErrorsEn = {.val = 0}; 
 static PhaseStatus phaseStatus = {.val = 0};
-static PhaseStatus_En phaseStatusEn = {.val = 0};
+//static PhaseStatus_En phaseStatusEn = {.val = 0};
 static ExtStatus extStatus = {.val = 0};
 static QapInd1 qapInd1 = {.val = 0};
 static QapInd2 qapInd2 = {.val = 0};
@@ -100,7 +100,7 @@ ConvPort convPortTable[] = CONV_PORT_TABLE;
 
 static bool fUpdateSsr = false, fUpdateLeds = false, fUpdateLampTest = false, fUpdateQap = false,
         f100ms = false, f1s = false, f10s = false, f1min = true, fForceMux = false, fForceFan = false, onState = false;
-static bool f9800 = false, f9408 = false, leakage = false, leakageCritic = false, leakage2 = false, leakageCritic2 = false, fPowerDown = false, fI2cFail = false;
+static bool f9800 = false, f9408 = false, leakage = false, leakageCritic = false, leakage2 = false, /*leakageCritic2 = false,*/ fPowerDown = false, fI2cFail = false;
 static bool isRst = false;
 static uint8_t commRstState = 0, commRstDly = 0;
 static uint16_t resetDly = 0, cap = 0, delta = 0, fFreqLife = 100, freq = 125, readDly = 0, fanDly = 0, onOffDly = 0, 
@@ -1040,18 +1040,20 @@ void OrOpCmds(uint16_t address)
                 RegsTable[address] = 0;
                 Or24Write();
             }
-        case Regs_IsoBits:
+            break;
+        case Regs_IsoDirectBits:
             if (RegsTable[address] == 1) //Test
             {
                 RegsTable[address] = 0;
                 IsoTestInit();
             }
-        case Regs_IsoBits3p:
-            if (RegsTable[address] == 1) //Test
-            {
-                RegsTable[address] = 0;
-                IsoTest2Init();
-            }
+            break;
+//        case Regs_IsoBits3p:
+//            if (RegsTable[address] == 1) //Test
+//            {
+//                RegsTable[address] = 0;
+//                IsoTest2Init();
+//            }
             
         case Regs_IsoBits_En:
             if (RegsTable[address] == 1) //Test
@@ -1159,26 +1161,20 @@ void OpSsr(void)
 void CheckSys(bool virtChange)
 {
     //const uint8_t Table208V[] = {Regs_3pL1V, Regs_3pL2V, Regs_3pL3V};
-    const uint8_t Table115V[] = {Regs_UpsV, Regs_DirectV, Regs_Ups2V, Regs_Ups3V, Regs_Ups4V};
+    const uint8_t Table115V[] = {Regs_UpsV, Regs_DirectV, /*Regs_Ups2V, Regs_Ups3V, Regs_Ups4V*/};
     const uint8_t Table60Hz[] = {/*Regs_3pL1F, Regs_3pL2F, Regs_3pL3F, */Regs_UpsF, 
-                                Regs_DirectF, Regs_Ups2F, Regs_Ups3F, Regs_Ups4F};
-    const uint8_t Table28V[] =  {Regs_HeuV, Regs_EsrAV, Regs_EsrBV, Regs_Ps4V};
+                                Regs_DirectF,/* Regs_Ups2F, Regs_Ups3F, Regs_Ups4F*/};
+    const uint8_t Table28V[] =  {/*Regs_HeuV,*/ Regs_EsrRV, Regs_EsrLV, Regs_CesmV};
     const uint8_t TableA[] = TABLE_A;
     const uint8_t TableALimit[] = TABLE_A_LIMIT;
     const uint16_t TableAOut[] = TABLE_A_OUT;
-    const uint8_t Table115V_En[] = {Regs_3pL1V_En, Regs_3pL2V_En, Regs_3pL3V_En};
-    const uint8_t Table28V_En[] =  {Regs_HeuV_En, Regs_PsV_En};
-    const uint8_t Table60Hz_En[] = {Regs_3pL1F_En, Regs_3pL2F_En, Regs_3pL3F_En};
-    const uint8_t TableA_En[] = TABLE_A_EN;
-    const uint8_t TableALimit_En[] = TABLE_A_LIMIT_EN;
-    const uint16_t TableAOut_En[] = TABLE_A_OUT_EN;
                                       
     uint8_t i, lastIdx = 0xFF;
     bool ind = false, qapPsuFail = false/*, fOverTemp = false*/, Table28EnCheck[sizeof(Table28V)] = {0}/*, _1pOverUnderFail = false*/;
     static uint32_t qapLedsLast = 0;
-    if (f9408){
+    
         
-        //Over Under voltage 
+    //Over Under voltage 
 //        for (i=0; i< sizeof(Table208V); i++)
 //            if ((RegsTable[Table208V[i]] < LIMIT_208V_L)||(RegsTable[Table208V[i]] > LIMIT_208V_H))
 //            {
@@ -1189,281 +1185,208 @@ void CheckSys(bool virtChange)
 //        phaseStatus._3p1 = (RegsTable[Table208V[0]] < LIMIT_LIVE_PH);
 //        phaseStatus._3p2 = (RegsTable[Table208V[1]] < LIMIT_LIVE_PH);
 //        phaseStatus._3p3 = (RegsTable[Table208V[2]] < LIMIT_LIVE_PH);
-        RegsTable[Regs_3PhaseStatus] = phaseStatus.val;
-        ind = false;
-        
-        for (i=0; i< sizeof(Table115V); i++){
-            if ((RegsTable[Table115V[i]] < LIMIT_115V_L)||(RegsTable[Table115V[i]] > LIMIT_115V_H))
-            {
-                ind = true;
-                lastIdx = i;
-            }
-            overUnderVolt._1pPlatform = (Table115V[i] == Regs_UpsV)? (lastIdx == i): overUnderVolt._1pPlatform;
-            overUnderVolt.ups1 = (Table115V[i] == Regs_DirectV)? (lastIdx == i): overUnderVolt.ups1;
-            overUnderVolt.ups2 = (Table115V[i] == Regs_Ups2V)? (lastIdx == i): overUnderVolt.ups2;
-            overUnderVolt.ups3 = (Table115V[i] == Regs_Ups3V)? (lastIdx == i): overUnderVolt.ups3;
-            overUnderVolt.ups4 = (Table115V[i] == Regs_Ups4V)? (lastIdx == i): overUnderVolt.ups4;
+    RegsTable[Regs_3PhaseStatus] = phaseStatus.val;
+    ind = false;
+
+    for (i=0; i< sizeof(Table115V); i++){
+        if ((RegsTable[Table115V[i]] < LIMIT_115V_L)||(RegsTable[Table115V[i]] > LIMIT_115V_H))
+        {
+            ind = true;
+            lastIdx = i;
         }
-        //_1pOverUnderFail = ind;
-        RegsTable[Regs_OverUnderV] = overUnderVolt.val;
-        if (!ind){
-            for (i=0; i< sizeof(Table60Hz); i++)
-                if ((RegsTable[Table60Hz[i]] < LIMIT_60HZ_L)||(RegsTable[Table60Hz[i]] > LIMIT_60HZ_H))
-                {
-                    ind = true;
-                    break;
-                }
-        }
-        leds.ok = (!ind) && (!overUnderVolt._3pPlatform) && (!fI2cFail);
-        leds.fail = !leds.ok;
-        
-        ind = false;
-        if (!ind){
-            Table28EnCheck[0] = ssr.heu && switches.heu;
-            Table28EnCheck[1] = ssr.esrA && switches.esrA;
-            Table28EnCheck[2] = ssr.esrB && switches.esrB;
-            Table28EnCheck[3] = ssr.cEsm && switches.cEsm;
-            for (i=0; i< sizeof(Table28V); i++)
-            if (Table28EnCheck[i] && ((RegsTable[Table28V[i]] < LIMIT_28V_L)||(RegsTable[Table28V[i]] > LIMIT_28V_H)))
+        overUnderVolt._1pPlatform = (Table115V[i] == Regs_UpsV)? (lastIdx == i): overUnderVolt._1pPlatform;
+        overUnderVolt.ups1 = (Table115V[i] == Regs_DirectV)? (lastIdx == i): overUnderVolt.ups1;
+        //overUnderVolt.ups2 = (Table115V[i] == Regs_Ups2V)? (lastIdx == i): overUnderVolt.ups2;
+        //overUnderVolt.ups3 = (Table115V[i] == Regs_Ups3V)? (lastIdx == i): overUnderVolt.ups3;
+        //overUnderVolt.ups4 = (Table115V[i] == Regs_Ups4V)? (lastIdx == i): overUnderVolt.ups4;
+    }
+    //_1pOverUnderFail = ind;
+    RegsTable[Regs_OverUnderV] = overUnderVolt.val;
+    if (!ind){
+        for (i=0; i< sizeof(Table60Hz); i++)
+            if ((RegsTable[Table60Hz[i]] < LIMIT_60HZ_L)||(RegsTable[Table60Hz[i]] > LIMIT_60HZ_H))
             {
                 ind = true;
                 break;
             }
+    }
+    leds.ok = (!ind) && (!overUnderVolt._3pPlatform) && (!fI2cFail);
+    leds.fail = !leds.ok;
+
+    ind = false;
+    if (!ind){
+        Table28EnCheck[0] = ssr.heu && switches.heu;
+        Table28EnCheck[1] = ssr.esrA && switches.esrA;
+        Table28EnCheck[2] = ssr.esrB && switches.esrB;
+        Table28EnCheck[3] = ssr.cEsm && switches.cEsm;
+        for (i=0; i< sizeof(Table28V); i++)
+        if (Table28EnCheck[i] && ((RegsTable[Table28V[i]] < LIMIT_28V_L)||(RegsTable[Table28V[i]] > LIMIT_28V_H)))
+        {
+            ind = true;
+            break;
         }
-        qapPsuFail  = ind;
-        leds.psCbFail = ind || ((RegsTable[Regs_MainAndCB] & 0x7E) != 0x7E);
-        leds.hvpFail = 0;
-        leds.sensorStackTemp = ((RegsTable[Regs_ExtStatus] & 0x2A) > 0);
-        ind = false;
-        for (i=0; i< sizeof(FanReg); i++)
-            if (RegsTable[FanReg[i]] < LIMIT_FAN)
-            {
-                ind = true;
-                break;
-            }
-        leds.fanIndication = ind;
-        
-        extStatus.heuOk = !sc16Status.heuNotOk;
-        extStatus.heuFail = sc16Status.heuNotOk;
-        extStatus.dfc1OverTemp = sc16Status.dfc1OverTemp;
-        extStatus.dfc2OverTemp = sc16Status.dfc2OverTemp;
-        extStatus.arduOverTemp = sc16Status.arduOverTemp;
-        extStatus.arduCritTemp = sc16Status.arduCritTemp;
-        
-        leds.heu = !extStatus.heuOk; //not OK LED
-        
-        
-        leds.esrB = ssr.esrB && switches.esrB;
-        leds.esrA = ssr.esrA && switches.esrA;
-        leds.hfMon = leds.esrA && ssr.hfMon && switches.hfMon;
-        leds.abjb = leds.esrB && switches.abjb;
-        leds.mainOnOff = onState;
-        leds.spare = 0;
-        
-        
-        //over temp
-        qapInd1.psuOverTemp = (RegsTable[Regs_TempPsuDrawer] > LIMIT_TEMP_PSU) || (RegsTable[Regs_TempPsuPcb] > LIMIT_TEMP_PSU);
-        qapInd1.esrA_OverTemp = (RegsTable[Regs_TempEsrA_U] > LIMIT_TEMP_ESR) || 
-                                (RegsTable[Regs_TempEsrA_F] > LIMIT_TEMP_ESR) || 
-                                (RegsTable[Regs_TempEsrA_D] > LIMIT_TEMP_ESR);
-        qapInd1.esrB_OverTemp = (RegsTable[Regs_TempEsrB_U] > LIMIT_TEMP_ESR) || 
-                                (RegsTable[Regs_TempEsrB_F] > LIMIT_TEMP_ESR) || 
-                                (RegsTable[Regs_TempEsrB_D] > LIMIT_TEMP_ESR);
-        qapInd1.esrC_OverTemp = (RegsTable[Regs_TempEsrC_U] > LIMIT_TEMP_ESR);// || 
-                                //(Regs_TempEsrC_F > LIMIT_TEMP_ESR) || 
-                                //(Regs_TempEsrC_D > LIMIT_TEMP_ESR);
+    }
+    qapPsuFail  = ind;
+    leds.psCbFail = ind || ((RegsTable[Regs_MainAndCB] & 0x7E) != 0x7E);
+    leds.hvpFail = 0;
+    leds.sensorStackTemp = ((RegsTable[Regs_ExtStatus] & 0x2A) > 0);
+    ind = false;
+    for (i=0; i< sizeof(FanReg); i++)
+        if (RegsTable[FanReg[i]] < LIMIT_FAN)
+        {
+            ind = true;
+            break;
+        }
+    leds.fanIndication = ind;
+
+    extStatus.heuOk = !sc16Status.heuNotOk;
+    extStatus.heuFail = sc16Status.heuNotOk;
+    extStatus.dfc1OverTemp = sc16Status.dfc1OverTemp;
+    extStatus.dfc2OverTemp = sc16Status.dfc2OverTemp;
+    extStatus.arduOverTemp = sc16Status.arduOverTemp;
+    extStatus.arduCritTemp = sc16Status.arduCritTemp;
+
+    leds.heu = !extStatus.heuOk; //not OK LED
+
+
+    leds.esrB = ssr.esrB && switches.esrB;
+    leds.esrA = ssr.esrA && switches.esrA;
+    leds.hfMon = leds.esrA && ssr.hfMon && switches.hfMon;
+    leds.abjb = leds.esrB && switches.abjb;
+    leds.mainOnOff = onState;
+    leds.spare = 0;
+
+
+    //over temp
+    qapInd1.psuOverTemp = (RegsTable[Regs_TempPsuDrawer] > LIMIT_TEMP_PSU) || (RegsTable[Regs_TempPsuPcb] > LIMIT_TEMP_PSU);
+    qapInd1.esrA_OverTemp = (RegsTable[Regs_TempEsrL_U] > LIMIT_TEMP_ESR) || 
+                            (RegsTable[Regs_TempEsrL_F] > LIMIT_TEMP_ESR) || 
+                            (RegsTable[Regs_TempEsrL_D] > LIMIT_TEMP_ESR);
+    qapInd1.esrB_OverTemp = (RegsTable[Regs_TempEsrR_U] > LIMIT_TEMP_ESR) || 
+                            (RegsTable[Regs_TempEsrR_F] > LIMIT_TEMP_ESR) || 
+                            (RegsTable[Regs_TempEsrR_D] > LIMIT_TEMP_ESR);
+    qapInd1.esrC_OverTemp = (RegsTable[Regs_TempEsrC_U] > LIMIT_TEMP_ESR);// || 
+                            //(Regs_TempEsrC_F > LIMIT_TEMP_ESR) || 
+                            //(Regs_TempEsrC_D > LIMIT_TEMP_ESR);
 //        qapLeds.esrD_OverTemp = (Regs_TempEsrD_U > LIMIT_TEMP_ESR) || 
 //                                (Regs_TempEsrD_F > LIMIT_TEMP_ESR) || 
 //                                (Regs_TempEsrD_D > LIMIT_TEMP_ESR);
-        /*fOverTemp = qapInd1.psuOverTemp ||
-                    qapInd1.esrA_OverTemp ||
-                    qapInd1.esrB_OverTemp ||
-                    qapInd1.esrC_OverTemp;*/
-        
-        
-        qapInd1.dfc1OverTemp = sc16Status.dfc1OverTemp;
-        qapInd1.dfc2OverTemp = sc16Status.dfc2OverTemp;
-        qapInd1.arduOverTemp = sc16Status.arduOverTemp;
-        qapInd1.dfc1CritTemp = sc16Status.dfc1CritTemp;
-        qapInd1.dfc2CritTemp = sc16Status.dfc2CritTemp;
-        qapInd1.arduCritTemp = sc16Status.arduCritTemp;
-        
-        leds.systemOk = (!leakage) && (!leakage2) && 
-                        (!leds.psCbFail) &&
-                        (leds.ok) &&
-                        (!leds.fail) 
+    /*fOverTemp = qapInd1.psuOverTemp ||
+                qapInd1.esrA_OverTemp ||
+                qapInd1.esrB_OverTemp ||
+                qapInd1.esrC_OverTemp;*/
+
+
+    qapInd1.dfc1OverTemp = sc16Status.dfc1OverTemp;
+    qapInd1.dfc2OverTemp = sc16Status.dfc2OverTemp;
+    qapInd1.arduOverTemp = sc16Status.arduOverTemp;
+    qapInd1.dfc1CritTemp = sc16Status.dfc1CritTemp;
+    qapInd1.dfc2CritTemp = sc16Status.dfc2CritTemp;
+    qapInd1.arduCritTemp = sc16Status.arduCritTemp;
+
+    leds.systemOk = (!leakage) && (!leakage2) && 
+                    (!leds.psCbFail) &&
+                    (leds.ok) &&
+                    (!leds.fail) 
 #ifndef PART_TEST 
-                        && (!leds.sensorStackTemp) &&
-                        (!leds.fanIndication) &&
-                        /*(!fOverTemp) &&*/
-                        (leds.heu)
+                    && (!leds.sensorStackTemp) &&
+                    (!leds.fanIndication) &&
+                    /*(!fOverTemp) &&*/
+                    (leds.heu)
 #endif
-                         ;
-        
-        qapInd2.systemOk = leds.systemOk;
-        qapInd2.acOn = onState;
-        qapInd1.acInFail = leds.fail;
-        qapInd2.acIn = leds.ok;
-        qapInd2.heuOk = extStatus.heuOk;
-        qapInd1.psuFail = qapPsuFail;
-        ind =              (RegsTable[Regs_FanEsrA1] < LIMIT_FAN) || 
-                           (RegsTable[Regs_FanEsrA2] < LIMIT_FAN) ||  
-                           (RegsTable[Regs_FanEsrA3] < LIMIT_FAN) || 
-                           (RegsTable[Regs_FanEsrA4] < LIMIT_FAN);
-        qapInd1.esrA_Fan = !ind; //fan OK LED
-        ind =              (RegsTable[Regs_FanEsrB1] < LIMIT_FAN) || 
-                           (RegsTable[Regs_FanEsrB2] < LIMIT_FAN) ||  
-                           (RegsTable[Regs_FanEsrB3] < LIMIT_FAN) || 
-                           (RegsTable[Regs_FanEsrB4] < LIMIT_FAN);
-        qapInd1.esrB_Fan = !ind; //fan OK LED
-        ind =              (RegsTable[Regs_FanEsrC1] < LIMIT_FAN);// || 
+                     ;
+
+    qapInd2.systemOk = leds.systemOk;
+    qapInd2.acOn = onState;
+    qapInd1.acInFail = leds.fail;
+    qapInd2.acIn = leds.ok;
+    qapInd2.heuOk = extStatus.heuOk;
+    qapInd1.psuFail = qapPsuFail;
+    ind =              (RegsTable[Regs_FanEsrA1] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrA2] < LIMIT_FAN) ||  
+                       (RegsTable[Regs_FanEsrA3] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrA4] < LIMIT_FAN);
+    qapInd1.esrA_Fan = !ind; //fan OK LED
+    ind =              (RegsTable[Regs_FanEsrB1] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrB2] < LIMIT_FAN) ||  
+                       (RegsTable[Regs_FanEsrB3] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrB4] < LIMIT_FAN);
+    qapInd1.esrB_Fan = !ind; //fan OK LED
+    ind =              (RegsTable[Regs_FanEsrC1] < LIMIT_FAN);// || 
 //                           (Regs_FanEsrC2 < LIMIT_FAN) ||  
 //                           (Regs_FanEsrC3 < LIMIT_FAN) || 
 //                           (Regs_FanEsrC4 < LIMIT_FAN);
-        qapInd1.esrC_Fan = !ind; //fan OK LED
-        
-        qapLeds.arduOverTemp = qapInd1.arduOverTemp;
-        qapLeds.psuOverTemp = qapInd1.psuOverTemp;
-        qapLeds.dfc1OverTemp = qapInd1.dfc1OverTemp;
-        qapLeds.dfc2OverTemp = qapInd1.dfc2OverTemp;
-        qapLeds.esrA_OverTemp = qapInd1.esrA_OverTemp;
-        qapLeds.esrB_OverTemp = qapInd1.esrB_OverTemp;
-        qapLeds.esrC_OverTemp = qapInd1.esrC_OverTemp;
-        qapLeds.acInFail = qapInd1.acInFail;
-        qapLeds.psuFail = qapInd1.psuFail;
-        qapLeds.arduCritTemp = qapInd1.arduCritTemp;
-        qapLeds.dfc1CritTemp = qapInd1.dfc1CritTemp;
-        qapLeds.dfc2CritTemp = qapInd1.dfc2CritTemp;
-        qapLeds.esrA_Fan = qapInd1.esrA_Fan;
-        qapLeds.esrB_Fan = qapInd1.esrB_Fan;
-        qapLeds.esrC_Fan = qapInd1.esrC_Fan;
-        
-        
-        qapLeds.acIn = qapInd2.acIn;
-        qapLeds.acOn = qapInd2.acOn;
-        qapLeds.arduOk = qapInd2.arduOk;
-        extStatus.arduPowerOn = qapLeds.arduOk;
-        qapLeds.dfc1Ok = qapInd2.dfc1Ok;
-        extStatus.dfc1PowerOn = qapLeds.dfc1Ok;
-        qapLeds.dfc2Ok = qapInd2.dfc2Ok;
-        extStatus.dfc2PowerOn = qapLeds.dfc2Ok;
-        qapLeds.systemOk = qapInd2.systemOk;
-        qapLeds.heuOk = qapInd2.heuOk;
-        
-        if (switches.lampTest)
-        {
-            leds.fail = 1;
-            leds.psCbFail = 1;
-            leds.ok = 1;
-            leds.sensorStackTemp = 1;
-            leds.hvpFail = 1;
-            leds.fanIndication = 1;
-            leds.heu = 1;
-            if (!switches.esrB) leds.esrB = 1;
-            leds.systemOk = 1;
-            if (!switches.hfMon) leds.hfMon = 1;
-            if (!switches.esrA) leds.esrA = 1;
-            if (!switches.abjb) leds.abjb = 1;
-            leds.spare = 1;
-            leds.mainOnOff = 1;
-        }
-        
-        if (leds.val != RegsTable[Regs_Leds])
-            fUpdateLeds = true;
-        if (qapLeds.val != qapLedsLast)
-            fUpdateQap = true;
-        
-        qapLedsLast = qapLeds.val;
-        // update Qap registers
-        RegsTable[Regs_QapInd1] = qapInd1.val;
-        RegsTable[Regs_QapInd2] = qapInd2.val;
-        RegsTable[Regs_ExtStatus] = extStatus.val;
-        // check current limits
-        for (i=0; i< sizeof(TableA); i++)
-            if (RegsTable[TableA[i]] > TableALimit[i])
-            {
-                //if value pass limit shutdown the channel.
-                RegsTable[Regs_CtrlSsr] &= ~TableAOut[i];
-                UpdateSsr(RegsTable[Regs_CtrlSsr]);
-                fUpdateSsr = true;
-            }
-        
-        CheckDependencies(virtChange);
-    }
-    else if (f9800)
+    qapInd1.esrC_Fan = !ind; //fan OK LED
+
+    qapLeds.arduOverTemp = qapInd1.arduOverTemp;
+    qapLeds.psuOverTemp = qapInd1.psuOverTemp;
+    qapLeds.dfc1OverTemp = qapInd1.dfc1OverTemp;
+    qapLeds.dfc2OverTemp = qapInd1.dfc2OverTemp;
+    qapLeds.esrA_OverTemp = qapInd1.esrA_OverTemp;
+    qapLeds.esrB_OverTemp = qapInd1.esrB_OverTemp;
+    qapLeds.esrC_OverTemp = qapInd1.esrC_OverTemp;
+    qapLeds.acInFail = qapInd1.acInFail;
+    qapLeds.psuFail = qapInd1.psuFail;
+    qapLeds.arduCritTemp = qapInd1.arduCritTemp;
+    qapLeds.dfc1CritTemp = qapInd1.dfc1CritTemp;
+    qapLeds.dfc2CritTemp = qapInd1.dfc2CritTemp;
+    qapLeds.esrA_Fan = qapInd1.esrA_Fan;
+    qapLeds.esrB_Fan = qapInd1.esrB_Fan;
+    qapLeds.esrC_Fan = qapInd1.esrC_Fan;
+
+
+    qapLeds.acIn = qapInd2.acIn;
+    qapLeds.acOn = qapInd2.acOn;
+    qapLeds.arduOk = qapInd2.arduOk;
+    extStatus.arduPowerOn = qapLeds.arduOk;
+    qapLeds.dfc1Ok = qapInd2.dfc1Ok;
+    extStatus.dfc1PowerOn = qapLeds.dfc1Ok;
+    qapLeds.dfc2Ok = qapInd2.dfc2Ok;
+    extStatus.dfc2PowerOn = qapLeds.dfc2Ok;
+    qapLeds.systemOk = qapInd2.systemOk;
+    qapLeds.heuOk = qapInd2.heuOk;
+
+    if (switches.lampTest)
     {
-        //Over Under voltage 
-        for (i=0; i< sizeof(Table115V_En); i++)
-            if ((RegsTable[Table115V_En[i]] < LIMIT_115V_L)||(RegsTable[Table115V_En[i]] > LIMIT_115V_H))
-            {
-                ind = true;
-                break;
-            }
-        sysErrorsEn._3pPlatformOverV = ind;
-        RegsTable[Regs_SysErrors_En] = sysErrorsEn.val;
-        phaseStatusEn._3p1 = (RegsTable[Table115V_En[0]] < LIMIT_LIVE_PH);
-        phaseStatusEn._3p2 = (RegsTable[Table115V_En[1]] < LIMIT_LIVE_PH);
-        phaseStatusEn._3p3 = (RegsTable[Table115V_En[2]] < LIMIT_LIVE_PH);
-        RegsTable[Regs_3PhaseStatus_En] = phaseStatusEn.val;
-        if (!ind){
-            for (i=0; i< sizeof(Table60Hz_En); i++)
-                if ((RegsTable[Table60Hz_En[i]] < LIMIT_60HZ_L)||(RegsTable[Table60Hz_En[i]] > LIMIT_60HZ_H))
-                {
-                    ind = true;
-                    break;
-                }
-        }
-        
-        ledsEn.ok = (!ind) && (!fI2cFail);
-        ledsEn.fail = !ledsEn.ok;
-        // check P.S.
-        ind = false;
-        for (i=0; i< sizeof(Table28V_En); i++)
-            if ((RegsTable[Table28V_En[i]] < LIMIT_28V_L)||(RegsTable[Table28V_En[i]] > LIMIT_28V_H))
-            {
-                switch(i){
-                    case 0:
-                        ind = (switchesEn.heu & ssrEn.heu)? true: false;
-                        break;
-                    case 1:
-                        ind = true;
-                        break;
-                    default:
-                        break;
-                }
-                ind = true;
-                if (ind) break;
-            }
-        ledsEn.fail = (!ledsEn.ok) || ind;
-        ledsEn.leakage = leakage;
-        ledsEn.mainOnOff = mainAndCbEn.main;
-        ledsEn.hvpFail = 0;
-        ledsEn.abjb = ssrEn.abjb && switchesEn.abjb;
-        
-        if (switchesEn.lampTest)
-        {
-            ledsEn.fail = 1;
-            ledsEn.ok = 1;
-            ledsEn.hvpFail = 1;
-            ledsEn.leakage = 1;
-            ledsEn.mainOnOff = 1;
-            ledsEn.abjb = 1;
-        }
-        
-        if (ledsEn.val != RegsTable[Regs_Leds_En])
-            fUpdateLeds = true;
-        
-        // check current limits
-        for (i=0; i< sizeof(TableA_En); i++)
-            if (RegsTable[TableA_En[i]] > TableALimit_En[i])
-            {
-                //if value pass limit shutdown the channel.
-                RegsTable[Regs_CtrlSsr_En] &= ~TableAOut_En[i];
-                UpdateSsr_En(RegsTable[Regs_CtrlSsr_En]);
-                fUpdateSsr = true;
-            }
-        
+        leds.fail = 1;
+        leds.psCbFail = 1;
+        leds.ok = 1;
+        leds.sensorStackTemp = 1;
+        leds.hvpFail = 1;
+        leds.fanIndication = 1;
+        leds.heu = 1;
+        if (!switches.esrB) leds.esrB = 1;
+        leds.systemOk = 1;
+        if (!switches.hfMon) leds.hfMon = 1;
+        if (!switches.esrA) leds.esrA = 1;
+        if (!switches.abjb) leds.abjb = 1;
+        leds.spare = 1;
+        leds.mainOnOff = 1;
     }
+
+    if (leds.val != RegsTable[Regs_Leds])
+        fUpdateLeds = true;
+    if (qapLeds.val != qapLedsLast)
+        fUpdateQap = true;
+
+    qapLedsLast = qapLeds.val;
+    // update Qap registers
+    RegsTable[Regs_QapInd1] = qapInd1.val;
+    RegsTable[Regs_QapInd2] = qapInd2.val;
+    RegsTable[Regs_ExtStatus] = extStatus.val;
+    // check current limits
+    for (i=0; i< sizeof(TableA); i++)
+        if (RegsTable[TableA[i]] > TableALimit[i])
+        {
+            //if value pass limit shutdown the channel.
+            RegsTable[Regs_CtrlSsr] &= ~TableAOut[i];
+            UpdateSsr(RegsTable[Regs_CtrlSsr]);
+            fUpdateSsr = true;
+        }
+
+    CheckDependencies(virtChange);
+    
+    
 }
 
 // Reset MCU
@@ -1832,14 +1755,14 @@ void ReadProc(void)
             break;
         case 2: // AN P = 0, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_ArduL1A, AN1, a_0p08);
+            //ReadCalc(Regs_ArduL1A, AN1, a_0p08);
             //ReadCalc(Regs_EsmA, AN2, a_0p08c_2); //C_ECM
             //ReadCalc(Regs_3pL1V, AN3, a_0p18);
-            ReadCalc(Regs_Isometer, AN5, a_0p0723);
-            ReadCalc(Regs_HeuV, AN7, a_0p0198b_1650);
+            ReadCalc(Regs_IsometerDirect, AN5, a_0p0723);
+            //ReadCalc(Regs_HeuV, AN7, a_0p0198b_1650);
             //SYS_CONSOLE_PRINT("an, calc: %u, %u\r\n", an, RegsTable[Regs_3pL1V_En]);
-            leakage = (RegsTable[Regs_Isometer] < LIMIT_LEAK);
-            leakageCritic = (RegsTable[Regs_Isometer] < LIMIT_LEAK_CRT);
+            leakage = (RegsTable[Regs_IsometerDirect] < LIMIT_LEAK);
+            leakageCritic = (RegsTable[Regs_IsometerDirect] < LIMIT_LEAK_CRT);
             if (leakageCritic)
             {
                 RegsTable[Regs_CtrlSsr] = 0;
@@ -1857,46 +1780,46 @@ void ReadProc(void)
             break;          
         case 3: // AN P = 1, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_Ups1EsubA, AN1, a_0p08c_3);
+            ReadCalc(Regs_UpsEsrL_A, AN1, a_0p08c_3);
             ReadCalc(Regs_Occ1A, AN2, a_0p08c_2);
             //ReadCalc(Regs_3pL2V, AN3, a_0p18);
-            ReadCalc(Regs_TempEsrA_U, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrL_U, AN5, a_0p0322b_1650);
             ReadCalc(Regs_TempEsrC_F, AN6, a_0p0322b_1650);
-            ReadCalc(Regs_EsrAV, AN7, a_0p0198b_1650);
+            ReadCalc(Regs_EsrRV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(2,0,3);
             readDly = 500;
             readState++;
             break;
         case 4: // AN P = 2, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_Ups2EsrA_A, AN2, a_0p08);             
+            //ReadCalc(Regs_Ups2EsrA_A, AN2, a_0p08);             
             //ReadCalc(Regs_3pL3V, AN3, a_0p18);
             ReadCalc(Regs_Occ3A, AN4, a_0p08c_2);
-            ReadCalc(Regs_TempEsrA_F, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrL_F, AN5, a_0p0322b_1650);
             ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
-            ReadCalc(Regs_Ps4V, AN7, a_0p0198b_1650);
+            ReadCalc(Regs_CesmV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(3,0,3);
             readDly = 500;
             readState++;
             break;
         case 5: // AN P = 3, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_EsrA6KwA, AN1, a_0p08);
+            //ReadCalc(Regs_EsrA6KwA, AN1, a_0p08);
             ReadCalc(Regs_UpsV, AN3, a_0p18);
-            ReadCalc(Regs_Dfc12L1A, AN4, a_0p08c_3);
-            ReadCalc(Regs_TempEsrA_D, AN5, a_0p0322b_1650);
+            //ReadCalc(Regs_Dfc12L1A, AN4, a_0p08c_3);
+            ReadCalc(Regs_TempEsrL_D, AN5, a_0p0322b_1650);
             ReadCalc(Regs_TempEsrD_U, AN6, a_0p0322b_1650);
-            ReadCalc(Regs_EsrBV, AN7, a_0p0198b_1650);
+            ReadCalc(Regs_EsrLV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(4,0,3);
             readDly = 500;
             readState++;
             break;
         case 6: // AN P = 4, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_Ups2OccA, AN2, a_0p08c_2);
+            //ReadCalc(Regs_Ups2OccA, AN2, a_0p08c_2);
             ReadCalc(Regs_DirectV, AN3, a_0p18);
             ReadCalc(Regs_Occ2A, AN4, a_0p08c_2); 
-            ReadCalc(Regs_TempEsrB_U, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrR_U, AN5, a_0p0322b_1650);
             ReadCalc(Regs_TempEsrD_F, AN6, a_0p0322b_1650);
             UpdateMuxConfig2(5,0,3);
             readDly = 500;
@@ -1904,9 +1827,9 @@ void ReadProc(void)
             break;
         case 7: // AN P = 5, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_Ups1EsrA_A, AN2, a_0p08);
-            ReadCalc(Regs_Ups2V, AN3, a_0p18);
-            ReadCalc(Regs_TempEsrB_D, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_UpsEsrR_A, AN2, a_0p08);
+            //ReadCalc(Regs_Ups2V, AN3, a_0p18);
+            ReadCalc(Regs_TempEsrR_D, AN5, a_0p0322b_1650);
             ReadCalc(Regs_TempEsrD_D, AN6, a_0p0322b_1650);
             UpdateMuxConfig2(6,0,3);
             readDly = 500;
@@ -1914,18 +1837,18 @@ void ReadProc(void)
             break;
         case 8: // AN P = 6, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_EsrB6KwA, AN1, a_0p08);
-            ReadCalc(Regs_Ups3V, AN3, a_0p18);
+            ReadCalc(Regs_DirectEsrL_A, AN1, a_0p08);
+            //ReadCalc(Regs_Ups3V, AN3, a_0p18);
             ReadCalc(Regs_ServiceA, AN4, a_0p08c_2);
-            ReadCalc(Regs_TempEsrB_F, AN5, a_0p0322b_1650);
+            ReadCalc(Regs_TempEsrR_F, AN5, a_0p0322b_1650);
             UpdateMuxConfig2(7,0,3);
             readDly = 500;
             readState++;
             break;
         case 9: // AN P = 7, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_Ups4V, AN3, a_0p18);
-            ReadCalc(Regs_AfeA, AN2, a_0p08);
+            //ReadCalc(Regs_Ups4V, AN3, a_0p18);
+            //ReadCalc(Regs_AfeA, AN2, a_0p08);
             ReadCalc(Regs_TempEsrC_U, AN5, a_0p0322b_1650);
             UpdateMuxConfig2(0,2,3);
             readDly = 100;
@@ -1934,62 +1857,62 @@ void ReadProc(void)
         case 10: // AN P = 0, PROC P = 2 
             if (readDly) break;
             ReadCalc(Regs_EsmA, AN2, a_0p08b_X6c_2); //C_ECM
-            UpdateMuxConfig2(0,8,3);
+            UpdateMuxConfig2(3,2,3);
             readDly = 100;
-            readState++;
+            readState = 12;
             break;
         case 11: // AN P = 0, PROC P = 8 
-            if (readDly) break;
-            ReadCalc(Regs_Isometer3p, AN4, a_0p0723);
-            leakage2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK);
-            leakageCritic2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK_CRT);
-            if (leakageCritic2)
-            {
-                RegsTable[Regs_CtrlSsr] = 0;
-                UpdateSsr(0);
-            }
-            if (isoState2){
-                readDly = 100;
-                readState = 11;
-            }
-            else{
-                UpdateMuxConfig2(3,2,3);
-                readDly = 100;
-                readState++; 
-            }
+//            if (readDly) break;
+//            ReadCalc(Regs_Isometer3p, AN4, a_0p0723);
+//            leakage2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK);
+//            leakageCritic2 = (RegsTable[Regs_Isometer3p] < LIMIT_LEAK_CRT);
+//            if (leakageCritic2)
+//            {
+//                RegsTable[Regs_CtrlSsr] = 0;
+//                UpdateSsr(0);
+//            }
+//            if (isoState2){
+//                readDly = 100;
+//                readState = 11;
+//            }
+//            else{
+//                UpdateMuxConfig2(3,2,3);
+//                readDly = 100;
+//                readState++; 
+//            }
             break;
         case 12: // AN P = 3, PROC P = 2 
             if (readDly) break;
             //ReadCalc(Regs_AbjbA, AN2, a_0p08b_1698c_3);
             ReadCalc(Regs_AbjbA, AN2, a_0p08b_X5c_3);
-            UpdateMuxConfig2(4,1,3);
-            readDly = 100;
-            readState++;
-            break;
-        case 13: // AN P = 4, PROC P = 1 
-            if (readDly) break;
-            ReadCalc(Regs_HeuA, AN1, a_0p08b_X3);
             UpdateMuxConfig2(5,1,3);
             readDly = 100;
-            readState++;
+            readState = 14;
+            break;
+        case 13: // AN P = 4, PROC P = 1 
+//            if (readDly) break;
+//            ReadCalc(Regs_HeuA, AN1, a_0p08b_X3);
+//            UpdateMuxConfig2(5,1,3);
+//            readDly = 100;
+//            readState++;
             break;
         case 14: // AN P = 5, PROC P = 1 
             if (readDly) break;
-            ReadCalc(Regs_EsrBPs2A, AN1, a_0p08b_X4);
+            ReadCalc(Regs_EsrLPs2A, AN1, a_0p08b_X4);
             UpdateMuxConfig2(6,2,3);
             readDly = 100;
             readState++;
             break;
         case 15: // AN P = 6, PROC P = 2 
             if (readDly) break;
-            ReadCalc(Regs_EsrA28A, AN2, a_0p08b_X2);
+            ReadCalc(Regs_EsrR28A, AN2, a_0p08b_X2);
             UpdateMuxConfig2(7,1,3);
             readDly = 100;
             readState++;
             break;
         case 16: // AN P = 7, PROC P = 1 
             if (readDly) break;
-            ReadCalc(Regs_HfMonA, AN1, a_0p08b_X1c_3);
+            ReadCalc(Regs_DfRfuA, AN1, a_0p08b_X1c_3);
             UpdateMuxConfig2(3,0,1);
             readDly = 50;
             capIn = 0;
@@ -2030,32 +1953,32 @@ void ReadProc(void)
         case 21: // AN P = 4, PROC P = 0, PROC F = 1 
             if (readDly) break;
             RegsTable[Regs_DirectF] = (capIn == 2)? freq: 0;
-            UpdateMuxConfig2(5,0,1);
-            readDly = 50;
-            capIn = 0;
-            readState++;
-            break;    
-        case 22: // AN P = 5, PROC P = 0, PROC F = 1 
-            if (readDly) break;
-            RegsTable[Regs_Ups2F] = (capIn == 2)? freq: 0;
-            UpdateMuxConfig2(6,0,1);
-            readDly = 50;
-            capIn = 0;
-            readState++;
-            break;  
-        case 23: // AN P = 6, PROC P = 0, PROC F = 1 
-            if (readDly) break;
-            RegsTable[Regs_Ups3F] = (capIn == 2)? freq: 0;
-            UpdateMuxConfig2(7,0,1);
-            readDly = 50;
-            capIn = 0;
-            readState++;
-            break;  
-        case 24: // AN P = 7, PROC P = 0, PROC F = 1 
-            if (readDly) break;
-            RegsTable[Regs_Ups4F] = (capIn == 2)? freq: 0;
+            //UpdateMuxConfig2(5,0,1);
+            //readDly = 50;
+            //capIn = 0;
             readState = 0;
-            break;  
+            break;    
+//        case 22: // AN P = 5, PROC P = 0, PROC F = 1 
+//            if (readDly) break;
+//            RegsTable[Regs_Ups2F] = (capIn == 2)? freq: 0;
+//            UpdateMuxConfig2(6,0,1);
+//            readDly = 50;
+//            capIn = 0;
+//            readState++;
+//            break;  
+//        case 23: // AN P = 6, PROC P = 0, PROC F = 1 
+//            if (readDly) break;
+//            RegsTable[Regs_Ups3F] = (capIn == 2)? freq: 0;
+//            UpdateMuxConfig2(7,0,1);
+//            readDly = 50;
+//            capIn = 0;
+//            readState++;
+//            break;  
+//        case 24: // AN P = 7, PROC P = 0, PROC F = 1 
+//            if (readDly) break;
+//            RegsTable[Regs_Ups4F] = (capIn == 2)? freq: 0;
+//            readState = 0;
+//            break;  
         default:
             break;
     }

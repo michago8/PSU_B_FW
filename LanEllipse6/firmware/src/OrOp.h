@@ -17,12 +17,12 @@ extern "C" {
  
 #define SSR_SD_DLY 10000 // 10S     
     
-#define TABLE_A     {Regs_ArduL1A, Regs_Dfc12L1A, Regs_HeuA,\
-                    Regs_EsrBPs2A/*?ESR B - 28V*/, Regs_EsrB6KwA/*?ESR B -1P*/, Regs_HfMonA,\
-                    Regs_EsmA, Regs_Ups2EsrA_A, Regs_Ups2OccA,\
-                    Regs_Ups1EsrA_A, Regs_EsrA28A, Regs_AfeA,\
+#define TABLE_A     {/*Regs_ArduL1A, Regs_Dfc12L1A, Regs_HeuA,*/\
+                    Regs_EsrLPs2A/*?ESR B - 28V*/, Regs_DirectEsrL_A,/*?ESR B -1P*/Regs_DfRfuA,\
+                    Regs_EsmA, /*Regs_Ups2EsrA_A, Regs_Ups2OccA,*/\
+                    Regs_UpsEsrR_A, Regs_EsrR28A, /*Regs_AfeA,*/\
                     Regs_Occ1A, Regs_Occ2A, Regs_Occ3A,\
-                    Regs_ServiceA, Regs_EsrA6KwA/*?ESR A -1P*/}
+                    Regs_ServiceA, /*Regs_EsrA6KwA*//*?ESR A -1P*/}
 #define TABLE_A_LIMIT {LIMIT_ARDU, LIMIT_DFC, LIMIT_HEU,\
                     LIMIT_ESR_B28V, LIMIT_ESR_B1P, LIMIT_HFMON,\
                     LIMIT_CESM, LIMIT_ESRAUPS2, LIMIT_UPS2OOC,\
