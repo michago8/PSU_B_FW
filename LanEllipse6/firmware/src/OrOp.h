@@ -265,19 +265,11 @@ extern "C" {
     
     typedef union{
         struct{
-            uint16_t arduCritTemp:1;
-            uint16_t arduOverTemp:1;
-            uint16_t arduPowerOn:1;
-            uint16_t dfc1OverTemp:1;
-            uint16_t dfc1PowerOn:1;
-            uint16_t dfc2OverTemp:1;
-            uint16_t dfc2PowerOn:1;
-            uint16_t heuOk:1;
-            uint16_t heuFail:1;
+            uint16_t na1:9;
             uint16_t pqapMainOnOff:1;
             uint16_t pqapBattle:1;
             uint16_t pqapErase:1;
-            uint16_t sqapErase:1;
+            uint16_t na2:1;
             uint16_t pcmMainOnOff:1;
             uint16_t pcmInd:1;
             uint16_t spare:1;

@@ -65,8 +65,8 @@ static void InitRst(void);
 CalibX calibX = {.x = {1650, 1650, 1650, 1650, 1650, 1650}, .cs = 0};
 #ifdef FAN_CHECK9_DIS
 const uint8_t FanOrder[] = {1,2,3,4,5,6,7,8,17};
-const uint8_t FanReg[] = {Regs_FanEsrA1, Regs_FanEsrA2, Regs_FanEsrA3, Regs_FanEsrA4,
-                            Regs_FanEsrB1, Regs_FanEsrB2, Regs_FanEsrB3, Regs_FanEsrB4,
+const uint8_t FanReg[] = {Regs_FanEsrR1, Regs_FanEsrR2, Regs_FanEsrR3, Regs_FanEsrR4,
+                            Regs_FanEsrL1, Regs_FanEsrL2, Regs_FanEsrL3, Regs_FanEsrL4,
                             Regs_FanPsu};
 #else
 
@@ -688,7 +688,7 @@ void ReadIntI04(void)
             extStatus.pqapErase     = !i2cArray[I2C1_77].P1;
             extStatus.pqapBattle    = i2cArray[I2C1_77].P2;
             extStatus.pqapMainOnOff = !i2cArray[I2C1_77].P3;
-            extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
+            //extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
             RegsTable[Regs_ExtStatus] = extStatus.val;
             SYS_CONSOLE_PRINT("I2C1_77, ExtStatus, pqapErase:: 0x%X, 0x%X, %u\r\n", i2cArray[I2C1_77].val, RegsTable[Regs_ExtStatus], extStatus.pqapErase);
             sc16Status.battleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;      
@@ -975,7 +975,7 @@ void OrOpPeriodic(void)
     if (ssrSdDly) ssrSdDly--;
     if (commRstDly) commRstDly--;
     
-    if (extStatus.pqapErase || extStatus.sqapErase)
+    if (extStatus.pqapErase/* || extStatus.sqapErase*/)
     {
         if (eraseCtr < eraseLimit)
             eraseCtr++;
@@ -1239,14 +1239,14 @@ void CheckSys(bool virtChange)
         }
     leds.fanIndication = ind;
 
-    extStatus.heuOk = !sc16Status.heuNotOk;
-    extStatus.heuFail = sc16Status.heuNotOk;
-    extStatus.dfc1OverTemp = sc16Status.dfc1OverTemp;
-    extStatus.dfc2OverTemp = sc16Status.dfc2OverTemp;
-    extStatus.arduOverTemp = sc16Status.arduOverTemp;
-    extStatus.arduCritTemp = sc16Status.arduCritTemp;
+    //extStatus.heuOk = !sc16Status.heuNotOk;
+    //extStatus.heuFail = sc16Status.heuNotOk;
+    //extStatus.dfc1OverTemp = sc16Status.dfc1OverTemp;
+    //extStatus.dfc2OverTemp = sc16Status.dfc2OverTemp;
+    //extStatus.arduOverTemp = sc16Status.arduOverTemp;
+    //extStatus.arduCritTemp = sc16Status.arduCritTemp;
 
-    leds.heu = !extStatus.heuOk; //not OK LED
+    //leds.heu = !extStatus.heuOk; //not OK LED
 
 
     leds.esrB = ssr.esrB && switches.esrB;
@@ -1260,12 +1260,12 @@ void CheckSys(bool virtChange)
     //over temp
     qapInd1.psuOverTemp = (RegsTable[Regs_TempPsuDrawer] > LIMIT_TEMP_PSU) || (RegsTable[Regs_TempPsuPcb] > LIMIT_TEMP_PSU);
     qapInd1.esrA_OverTemp = (RegsTable[Regs_TempEsrL_U] > LIMIT_TEMP_ESR) || 
-                            (RegsTable[Regs_TempEsrL_F] > LIMIT_TEMP_ESR) || 
+                            //(RegsTable[Regs_TempEsrL_F] > LIMIT_TEMP_ESR) || 
                             (RegsTable[Regs_TempEsrL_D] > LIMIT_TEMP_ESR);
     qapInd1.esrB_OverTemp = (RegsTable[Regs_TempEsrR_U] > LIMIT_TEMP_ESR) || 
-                            (RegsTable[Regs_TempEsrR_F] > LIMIT_TEMP_ESR) || 
+                            //(RegsTable[Regs_TempEsrR_F] > LIMIT_TEMP_ESR) || 
                             (RegsTable[Regs_TempEsrR_D] > LIMIT_TEMP_ESR);
-    qapInd1.esrC_OverTemp = (RegsTable[Regs_TempEsrC_U] > LIMIT_TEMP_ESR);// || 
+    //qapInd1.esrC_OverTemp = (RegsTable[Regs_TempEsrC_U] > LIMIT_TEMP_ESR);// || 
                             //(Regs_TempEsrC_F > LIMIT_TEMP_ESR) || 
                             //(Regs_TempEsrC_D > LIMIT_TEMP_ESR);
 //        qapLeds.esrD_OverTemp = (Regs_TempEsrD_U > LIMIT_TEMP_ESR) || 
@@ -1300,23 +1300,23 @@ void CheckSys(bool virtChange)
     qapInd2.acOn = onState;
     qapInd1.acInFail = leds.fail;
     qapInd2.acIn = leds.ok;
-    qapInd2.heuOk = extStatus.heuOk;
+    //qapInd2.heuOk = extStatus.heuOk;
     qapInd1.psuFail = qapPsuFail;
-    ind =              (RegsTable[Regs_FanEsrA1] < LIMIT_FAN) || 
-                       (RegsTable[Regs_FanEsrA2] < LIMIT_FAN) ||  
-                       (RegsTable[Regs_FanEsrA3] < LIMIT_FAN) || 
-                       (RegsTable[Regs_FanEsrA4] < LIMIT_FAN);
+    ind =              (RegsTable[Regs_FanEsrR1] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrR2] < LIMIT_FAN) ||  
+                       (RegsTable[Regs_FanEsrR3] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrR4] < LIMIT_FAN);
     qapInd1.esrA_Fan = !ind; //fan OK LED
-    ind =              (RegsTable[Regs_FanEsrB1] < LIMIT_FAN) || 
-                       (RegsTable[Regs_FanEsrB2] < LIMIT_FAN) ||  
-                       (RegsTable[Regs_FanEsrB3] < LIMIT_FAN) || 
-                       (RegsTable[Regs_FanEsrB4] < LIMIT_FAN);
+    ind =              (RegsTable[Regs_FanEsrL1] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrL2] < LIMIT_FAN) ||  
+                       (RegsTable[Regs_FanEsrL3] < LIMIT_FAN) || 
+                       (RegsTable[Regs_FanEsrL4] < LIMIT_FAN);
     qapInd1.esrB_Fan = !ind; //fan OK LED
-    ind =              (RegsTable[Regs_FanEsrC1] < LIMIT_FAN);// || 
-//                           (Regs_FanEsrC2 < LIMIT_FAN) ||  
-//                           (Regs_FanEsrC3 < LIMIT_FAN) || 
-//                           (Regs_FanEsrC4 < LIMIT_FAN);
-    qapInd1.esrC_Fan = !ind; //fan OK LED
+//    ind =              (RegsTable[Regs_FanEsrC1] < LIMIT_FAN);// || 
+////                           (Regs_FanEsrC2 < LIMIT_FAN) ||  
+////                           (Regs_FanEsrC3 < LIMIT_FAN) || 
+////                           (Regs_FanEsrC4 < LIMIT_FAN);
+//    qapInd1.esrC_Fan = !ind; //fan OK LED
 
     qapLeds.arduOverTemp = qapInd1.arduOverTemp;
     qapLeds.psuOverTemp = qapInd1.psuOverTemp;
@@ -1338,11 +1338,11 @@ void CheckSys(bool virtChange)
     qapLeds.acIn = qapInd2.acIn;
     qapLeds.acOn = qapInd2.acOn;
     qapLeds.arduOk = qapInd2.arduOk;
-    extStatus.arduPowerOn = qapLeds.arduOk;
+    //extStatus.arduPowerOn = qapLeds.arduOk;
     qapLeds.dfc1Ok = qapInd2.dfc1Ok;
-    extStatus.dfc1PowerOn = qapLeds.dfc1Ok;
+    //extStatus.dfc1PowerOn = qapLeds.dfc1Ok;
     qapLeds.dfc2Ok = qapInd2.dfc2Ok;
-    extStatus.dfc2PowerOn = qapLeds.dfc2Ok;
+    //extStatus.dfc2PowerOn = qapLeds.dfc2Ok;
     qapLeds.systemOk = qapInd2.systemOk;
     qapLeds.heuOk = qapInd2.heuOk;
 
@@ -1784,7 +1784,7 @@ void ReadProc(void)
             ReadCalc(Regs_Occ1A, AN2, a_0p08c_2);
             //ReadCalc(Regs_3pL2V, AN3, a_0p18);
             ReadCalc(Regs_TempEsrL_U, AN5, a_0p0322b_1650);
-            ReadCalc(Regs_TempEsrC_F, AN6, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrC_F, AN6, a_0p0322b_1650);
             ReadCalc(Regs_EsrRV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(2,0,3);
             readDly = 500;
@@ -1795,8 +1795,8 @@ void ReadProc(void)
             //ReadCalc(Regs_Ups2EsrA_A, AN2, a_0p08);             
             //ReadCalc(Regs_3pL3V, AN3, a_0p18);
             ReadCalc(Regs_Occ3A, AN4, a_0p08c_2);
-            ReadCalc(Regs_TempEsrL_F, AN5, a_0p0322b_1650);
-            ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrL_F, AN5, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
             ReadCalc(Regs_CesmV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(3,0,3);
             readDly = 500;
@@ -1808,7 +1808,7 @@ void ReadProc(void)
             ReadCalc(Regs_UpsV, AN3, a_0p18);
             //ReadCalc(Regs_Dfc12L1A, AN4, a_0p08c_3);
             ReadCalc(Regs_TempEsrL_D, AN5, a_0p0322b_1650);
-            ReadCalc(Regs_TempEsrD_U, AN6, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrD_U, AN6, a_0p0322b_1650);
             ReadCalc(Regs_EsrLV, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(4,0,3);
             readDly = 500;
@@ -1820,7 +1820,7 @@ void ReadProc(void)
             ReadCalc(Regs_DirectV, AN3, a_0p18);
             ReadCalc(Regs_Occ2A, AN4, a_0p08c_2); 
             ReadCalc(Regs_TempEsrR_U, AN5, a_0p0322b_1650);
-            ReadCalc(Regs_TempEsrD_F, AN6, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrD_F, AN6, a_0p0322b_1650);
             UpdateMuxConfig2(5,0,3);
             readDly = 500;
             readState++;
@@ -1830,7 +1830,7 @@ void ReadProc(void)
             ReadCalc(Regs_UpsEsrR_A, AN2, a_0p08);
             //ReadCalc(Regs_Ups2V, AN3, a_0p18);
             ReadCalc(Regs_TempEsrR_D, AN5, a_0p0322b_1650);
-            ReadCalc(Regs_TempEsrD_D, AN6, a_0p0322b_1650);
+            //ReadCalc(Regs_TempEsrD_D, AN6, a_0p0322b_1650);
             UpdateMuxConfig2(6,0,3);
             readDly = 500;
             readState++;
@@ -1840,19 +1840,19 @@ void ReadProc(void)
             ReadCalc(Regs_DirectEsrL_A, AN1, a_0p08);
             //ReadCalc(Regs_Ups3V, AN3, a_0p18);
             ReadCalc(Regs_ServiceA, AN4, a_0p08c_2);
-            ReadCalc(Regs_TempEsrR_F, AN5, a_0p0322b_1650);
-            UpdateMuxConfig2(7,0,3);
+            //ReadCalc(Regs_TempEsrR_F, AN5, a_0p0322b_1650);
+            UpdateMuxConfig2(0,2,3);
             readDly = 500;
-            readState++;
+            readState = 10;
             break;
         case 9: // AN P = 7, PROC P = 0 
-            if (readDly) break;
-            //ReadCalc(Regs_Ups4V, AN3, a_0p18);
-            //ReadCalc(Regs_AfeA, AN2, a_0p08);
-            ReadCalc(Regs_TempEsrC_U, AN5, a_0p0322b_1650);
-            UpdateMuxConfig2(0,2,3);
-            readDly = 100;
-            readState++;
+//            if (readDly) break;
+//            //ReadCalc(Regs_Ups4V, AN3, a_0p18);
+//            //ReadCalc(Regs_AfeA, AN2, a_0p08);
+//            ReadCalc(Regs_TempEsrC_U, AN5, a_0p0322b_1650);
+//            UpdateMuxConfig2(0,2,3);
+//            readDly = 100;
+//            readState++;
             break;
         case 10: // AN P = 0, PROC P = 2 
             if (readDly) break;
