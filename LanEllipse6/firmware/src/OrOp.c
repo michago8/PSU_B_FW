@@ -10,7 +10,7 @@
 #include "OrTmp117.h"
 #include "OrDs1682.h"
 #include "Or24Fc512.h"
-#include "OrSc16is741.h"
+//#include "OrSc16is741.h"
 #include "OrOp.h"
 #include "OrConfig.h"
 
@@ -24,7 +24,7 @@ enum{
 };
 
 static void UpdateSsr(uint16_t val);
-static void UpdateSsr_En(uint16_t val);
+//static void UpdateSsr_En(uint16_t val);
 static void OpSsr(void);
 static void ReadSw(void);
 static void UpdateLeds(void);
@@ -101,7 +101,7 @@ ConvPort convPortTable[] = CONV_PORT_TABLE;
 static bool fUpdateSsr = false, fUpdateLeds = false, fUpdateLampTest = false, fUpdateQap = false,
         f100ms = false, f1s = false, f10s = false, f1min = true, fForceMux = false, fForceFan = false, onState = false;
 static bool f9800 = false, f9408 = false, leakage = false, leakageCritic = false, leakage2 = false, /*leakageCritic2 = false,*/ fPowerDown = false, fI2cFail = false;
-static bool isRst = false;
+static bool isRst = false, fBattleShort = false;
 static uint8_t commRstState = 0, commRstDly = 0;
 static uint16_t resetDly = 0, cap = 0, delta = 0, fFreqLife = 100, freq = 125, readDly = 0, fanDly = 0, onOffDly = 0, 
         ResetSysDly = 0, ResetSysOffDly = 0, isoDly = 0, isoDly2 = 0;
@@ -116,14 +116,8 @@ void InitRst(void)
     {
         RegsTable[Regs_RstInd] = 0;
         isRst = true;
-        if (f9408){
-           RegsTable[Regs_CtrlSsr] =  RegsTable[Regs_RstState];
-           UpdateSsr(RegsTable[Regs_CtrlSsr]);
-        }
-        else{
-           RegsTable[Regs_CtrlSsr_En] =  RegsTable[Regs_RstState];
-           UpdateSsr_En(RegsTable[Regs_CtrlSsr_En]); 
-        }
+        RegsTable[Regs_CtrlSsr] =  RegsTable[Regs_RstState];
+        UpdateSsr(RegsTable[Regs_CtrlSsr]);
         Or24Write();
     }
 }
@@ -144,7 +138,7 @@ void CommRstProc(void)
             break;
         case 1:
             RegsTable[Regs_RstInd] = 0x55;
-            RegsTable[Regs_RstState] = f9408? RegsTable[Regs_CtrlSsr]: RegsTable[Regs_CtrlSsr_En];
+            RegsTable[Regs_RstState] = RegsTable[Regs_CtrlSsr];
             Or24Write();
             commRstDly = 10;
             commRstState++;
@@ -185,10 +179,10 @@ void OrOpInit(void)
     Or24ReadCalib();
     SysConf();
     InitRst();
-    OrSc16_Init(Ch_Ardu);
-    OrSc16_Init(Ch_Dfc1);
-    OrSc16_Init(Ch_Dfc2);
-    OrSc16_Init(Ch_Heu);
+    //OrSc16_Init(Ch_Ardu);
+    //OrSc16_Init(Ch_Dfc1);
+    //OrSc16_Init(Ch_Dfc2);
+    //OrSc16_Init(Ch_Heu);
 }
 
 bool OrOpIs9408(void)
@@ -213,15 +207,8 @@ void ShutDownProc(void)
             if (powerDownCtr == 0)
             {
                 RegsTable[Regs_PowerDown] = 0;
-                
-                if (f9408){
-                    RegsTable[Regs_CtrlSsr] = 0;
-                    UpdateSsr(0); //turn off all SSRs
-                }
-                else {
-                    RegsTable[Regs_CtrlSsr_En] = 0;
-                    UpdateSsr_En(0);
-                }
+                RegsTable[Regs_CtrlSsr] = 0;
+                UpdateSsr(0); //turn off all SSRs
             }
         }
     }
@@ -303,87 +290,13 @@ void OrOpProc(void)
 // this function should be called every second
 void UpdateTempTimers(void)
 {
-    if (sc16Status.battleShort)
+    if (fBattleShort)
     {
-        // ARDU
-        if (sc16Status.arduCritTemp){
-            if (t2Ardu < 60) t2Ardu++;
-            else{
-                if (ssr.ardu){
-                    ssr.ardu = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t2Ardu = 0;
-            
-        // DFC1
-        if (sc16Status.dfc1CritTemp){
-            if (t2Dfc1 < 60) t2Dfc1++;
-            else{
-                if (ssr.dfc){
-                    ssr.dfc = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t2Dfc1 = 0;
         
-        // DFC2
-        if (sc16Status.dfc2CritTemp){
-            if (t2Dfc2 < 60) t2Dfc2++;
-            else{
-                if (ssr.dfc){
-                    ssr.dfc = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t2Dfc2 = 0;
         
     }
     else{ // Battle Short is not pressed
-        // ARDU
-        if (sc16Status.arduOverTemp){
-            if (t1Ardu < t1Limit) t1Ardu++;
-            else{
-                if (ssr.ardu){
-                    ssr.ardu = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t1Ardu = 0;
-            
-        // DFC1
-        if (sc16Status.dfc1OverTemp){
-            if (t1Dfc1 < t1Limit) t1Dfc1++;
-            else{
-                if (ssr.dfc){
-                    ssr.dfc = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t1Dfc1 = 0;
         
-        // DFC2
-        if (sc16Status.dfc2OverTemp){
-            if (t1Dfc2 < t1Limit) t1Dfc2++;
-            else{
-                if (ssr.dfc){
-                    ssr.dfc = 0;
-                    fUpdateSsr = true;
-                }
-                
-            }
-        }
-        else t1Dfc2 = 0;
     }
     if (fUpdateSsr){
         RegsTable[Regs_CtrlSsr] = ssr.val;
@@ -534,41 +447,13 @@ void ReadIc(void)
 void ReadTemp(void)
 {
     uint8_t temp;
-    
-    if (f9800){
-        if (!OrLm75_Read(&temp)){
-            RegsTable[Regs_TempPsuPcb_En] = temp;
-        }
-        if (!OrTmp117_Read((int8_t*)&temp)){
-            RegsTable[Regs_TempPsuDrawer_En] = temp;
-        }
-        sysErrorsEn.OverTemp = (RegsTable[Regs_TempPsuPcb_En] > LIMIT_TEMP_PSU) || 
-                (RegsTable[Regs_TempPsuDrawer_En] > LIMIT_TEMP_PSU);
-        sysErrorsEn.CriticalTemp = (RegsTable[Regs_TempPsuPcb_En] > LIMIT_TEMP_PSU_CRT) || 
-                (RegsTable[Regs_TempPsuDrawer_En] > LIMIT_TEMP_PSU_CRT);
-        RegsTable[Regs_SysErrors_En] = sysErrorsEn.val; 
-//        if (((!RegsTable[Regs_BattleShort])&& (sysErrorsEn.OverTemp))||
-//                ((RegsTable[Regs_BattleShort])&& (sysErrorsEn.CriticalTemp)))
-//            {
-//                RegsTable[Regs_CtrlSsr_En] = 0;
-//                UpdateSsr_En(0);
-//            }
-        if (sysErrorsEn.CriticalTemp)
-        {
-            RegsTable[Regs_CtrlSsr_En] = 0;
-            UpdateSsr_En(0);
-        }
-            
-    }  
-    else if (f9408){
-        if (!OrLm75_Read(&temp)){
-            RegsTable[Regs_TempPsuPcb] = temp;
-        }
-        if (!OrTmp117_Read((int8_t*)&temp)){
-            RegsTable[Regs_TempPsuDrawer] = temp;
-        }
-        
+    if (!OrLm75_Read(&temp)){
+        RegsTable[Regs_TempPsuPcb] = temp;
     }
+    if (!OrTmp117_Read((int8_t*)&temp)){
+        RegsTable[Regs_TempPsuDrawer] = temp;
+    }
+    
 }
 
 void ReadAns(void)
@@ -618,31 +503,22 @@ void UpdateLeds(void)
         RegsTable[Regs_Leds] = leds.val;
         RegsTable[Regs_Leds_En] = ledsEn.val;
         
-        if (f9408){
-            i2cArray[I2C2_75].P0 = leds.fail;
-            i2cArray[I2C2_75].P1 = leds.psCbFail;
-            i2cArray[I2C2_75].P2 = leds.ok;
-            i2cArray[I2C2_75].P3 = leds.sensorStackTemp;
-            i2cArray[I2C2_75].P4 = leds.hvpFail;
-            i2cArray[I2C2_75].P5 = leds.fanIndication;
-            i2cArray[I2C2_75].P6 = leds.heu;
-            i2cArray[I2C2_75].P7 = leds.esrB;
-            i2cArray[I2C2_75].P10 = leds.systemOk;
-            i2cArray[I2C2_75].P11 = leds.hfMon;
-            i2cArray[I2C2_75].P12 = leds.esrA;
-            i2cArray[I2C2_75].P13 = leds.abjb;
-            //i2cArray[I2C2_75].P14 = leds.spare;
-            i2cArray[I2C2_75].P15 = leds.mainOnOff;
-        }
-        else if (f9800){
-            i2cArray[I2C2_75].P0 = ledsEn.fail;
-            i2cArray[I2C2_75].P2 = ledsEn.ok;
-            i2cArray[I2C2_75].P4 = ledsEn.hvpFail;
-            i2cArray[I2C2_75].P10 = ledsEn.leakage;
-            i2cArray[I2C2_75].P13 = ledsEn.abjb;
-            i2cArray[I2C2_75].P15 = ledsEn.mainOnOff;
-            SYS_CONSOLE_PRINT("LED ABJB: %u\r\n", ledsEn.abjb);
-        }
+        
+        i2cArray[I2C2_75].P0 = leds.fail;
+        i2cArray[I2C2_75].P1 = leds.psCbFail;
+        i2cArray[I2C2_75].P2 = leds.ok;
+        //i2cArray[I2C2_75].P3 = leds.sensorStackTemp;
+        i2cArray[I2C2_75].P4 = leds.hvpFail;
+        i2cArray[I2C2_75].P5 = leds.fanIndication;
+        //i2cArray[I2C2_75].P6 = leds.heu;
+        i2cArray[I2C2_75].P7 = leds.esrL;
+        i2cArray[I2C2_75].P10 = leds.systemOk;
+        i2cArray[I2C2_75].P11 = leds.dfRfu;
+        i2cArray[I2C2_75].P12 = leds.esrR;
+        i2cArray[I2C2_75].P13 = leds.abjb;
+        //i2cArray[I2C2_75].P14 = leds.spare;
+        i2cArray[I2C2_75].P15 = leds.mainOnOff;
+        
         
         if (!OrTcaWriteOutput(cpU80.address, cpU80.ch, i2cArray[I2C2_75].val));
     }
@@ -652,7 +528,7 @@ void UpdateLeds(void)
         OrTcaWriteOutput(cpU80.address, cpU80.ch, i2cArray[I2C2_75].val);
     }
     
-    if (f9408 && (fStart || fUpdateQap)){
+    if (fStart || fUpdateQap){
         fUpdateQap = false;
         i2cArray[I2C1_74].val = qapLeds.qap1L;
         i2cArray[I2C1_75].val = qapLeds.qap1H + (qapLeds.qap2L << 6);
@@ -691,7 +567,7 @@ void ReadIntI04(void)
             //extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
             RegsTable[Regs_ExtStatus] = extStatus.val;
             SYS_CONSOLE_PRINT("I2C1_77, ExtStatus, pqapErase:: 0x%X, 0x%X, %u\r\n", i2cArray[I2C1_77].val, RegsTable[Regs_ExtStatus], extStatus.pqapErase);
-            sc16Status.battleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;      
+            fBattleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;      
         }
         
     }
@@ -708,206 +584,135 @@ uint16_t GetSeqDly(void)
 void OnOffSwitch(void)
 {
     static bool onLast = false, sw1Last = false, sw2Last = false;
-    
-    if (f9408){
-        if (isRst){
-            onLast = mainAndCb.main;
-            onState = (RegsTable[Regs_CtrlSsr] != 0);
-            isRst = false;
+ 
+    if (isRst){
+        onLast = mainAndCb.main;
+        onState = (RegsTable[Regs_CtrlSsr] != 0);
+        isRst = false;
+    }
+    //TBD Test if input voltage is OK
+    if ((mainAndCb.main != onLast) || (ResetSysDly == 1)) {
+        ResetSysDly = 0;
+        onLast = mainAndCb.main;
+        if (mainAndCb.main == 0){
+            RegsTable[Regs_CtrlSsr] = 0;
+            UpdateSsr(RegsTable[Regs_CtrlSsr]); //turn off all SSRs
+            onState = false;
         }
-        //TBD Test if input voltage is OK
-        if ((mainAndCb.main != onLast) || (ResetSysDly == 1)) {
-            ResetSysDly = 0;
-            onLast = mainAndCb.main;
-            if (mainAndCb.main == 0){
-                RegsTable[Regs_CtrlSsr] = 0;
-                UpdateSsr(RegsTable[Regs_CtrlSsr]); //turn off all SSRs
-                onState = false;
-            }
-            else{
-                onState = true;
-                onOffState = 1;
-                onOffDly = GetSeqDly();
-            }
+        else{
+            onState = true;
+            onOffState = 1;
+            onOffDly = GetSeqDly();
         }
-        else if (mainAndCb.main == 1)
+    }
+    else if (mainAndCb.main == 1)
+    {
+        if (((sw1Last != extStatus.pcmMainOnOff) && extStatus.pcmMainOnOff)||
+                ((sw2Last != extStatus.pqapMainOnOff) && extStatus.pqapMainOnOff)||
+                fPowerDown)
         {
-            if (((sw1Last != extStatus.pcmMainOnOff) && extStatus.pcmMainOnOff)||
-                    ((sw2Last != extStatus.pqapMainOnOff) && extStatus.pqapMainOnOff)||
-                    fPowerDown)
-            {
-                if (!fPowerDown)
-                    onState = !onState; // change state
-                else{ //fPowerDown is Set
-                    fPowerDown = false;
-                    if (!onState){ //system is OFF ,nothing to do
-                        return;
-                    } else {
-                        onState = false; // start shutdown process
-                    }
-                }
-                if (!onState){
-                    //RegsTable[Regs_CtrlSsr] = 0;
-                    //UpdateSsr(RegsTable[Regs_CtrlSsr]); //turn off all SSRs
-                    RegsTable[Regs_PowerDown] = 1;
-                    powerDownCtr = ((RegsTable[Regs_SdDly] == 0)||(RegsTable[Regs_SdDly] == 0xFFFF))? 59: RegsTable[Regs_SdDly]; 
-                }
-                else{
-                    // check to see if we the shutdown proc was completed. so we need to turn on the system.
-                    if (RegsTable[Regs_PowerDown] == 0){
-                        onOffState = 1;
-                        onOffDly = GetSeqDly();
-                    }
-                    else // if shutdown process didn't finish we don't need to start power ON only stop shutdown
-                        RegsTable[Regs_PowerDown] = 0;
+            if (!fPowerDown)
+                onState = !onState; // change state
+            else{ //fPowerDown is Set
+                fPowerDown = false;
+                if (!onState){ //system is OFF ,nothing to do
+                    return;
+                } else {
+                    onState = false; // start shutdown process
                 }
             }
-        }
-        sw1Last = extStatus.pcmMainOnOff;
-        sw2Last = extStatus.pqapMainOnOff;
-    }
-    else if (f9800){
-        if (isRst){
-            onLast = mainAndCb.main;
-            isRst = false;
-        }
-        // TBD test if input voltage is OK
-        if ((mainAndCbEn.main != onLast) || (ResetSysDly == 1)) {
-            ResetSysDly = 0;
-            onLast = mainAndCbEn.main;
-            if (mainAndCbEn.main == 0){
-                RegsTable[Regs_CtrlSsr_En] = 0;
-                UpdateSsr_En(RegsTable[Regs_CtrlSsr_En]); //turn off all SSRs
+            if (!onState){
+                //RegsTable[Regs_CtrlSsr] = 0;
+                //UpdateSsr(RegsTable[Regs_CtrlSsr]); //turn off all SSRs
+                RegsTable[Regs_PowerDown] = 1;
+                powerDownCtr = ((RegsTable[Regs_SdDly] == 0)||(RegsTable[Regs_SdDly] == 0xFFFF))? 59: RegsTable[Regs_SdDly]; 
             }
             else{
-                onOffState = 1;
-                onOffDly = GetSeqDly();
-            }
-        }
-        else if (mainAndCbEn.main == 1){
-            if (fPowerDown)
-            {
-                fPowerDown = false;
-                powerDownCtr = ((RegsTable[Regs_SdDly] == 0)||(RegsTable[Regs_SdDly] == 0xFFFF))? 59: RegsTable[Regs_SdDly]; 
-                //SYS_CONSOLE_PRINT("Power down Counter2 %d\r\n", powerDownCtr);
+                // check to see if we the shutdown proc was completed. so we need to turn on the system.
+                if (RegsTable[Regs_PowerDown] == 0){
+                    onOffState = 1;
+                    onOffDly = GetSeqDly();
+                }
+                else // if shutdown process didn't finish we don't need to start power ON only stop shutdown
+                    RegsTable[Regs_PowerDown] = 0;
             }
         }
     }
-    
+    sw1Last = extStatus.pcmMainOnOff;
+    sw2Last = extStatus.pqapMainOnOff;
 }
 
 void OnOffProc(void)
 {
-    if (f9408){
-        switch (onOffState){
-            case 0:
-                break;
-            case 1:
-                if (onOffDly) break;
-                ssrSdDly = SSR_SD_DLY;
-                ssr.esrB = (switches.esrB)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 2;
-                break;
-            case 2:
-                if (onOffDly) break;
-                ssr.esrA = (switches.esrA)? 1: 0;
-                ssr.hfMon = (switches.hfMon)? 1: 0;
-                ssr.cEsm = (switches.cEsm)? 1: 0;
-                ssr.service = (switches.service)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 3;
-                break;
-            case 3:
-                if (onOffDly) break;
-                ssr.ups2Occ = (switches.ups2Occ)? 1: 0;
-                RegsTable[Regs_CtrlSsr_En] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 4;
-                break;
-            case 4:
-                if (onOffDly) break;
-                ssr.heu = (switches.heu)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 5;
-                break;
-            case 5:
-                if (onOffDly) break;
-                ssr.dfc = (switches.dfc)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 6;
-                break;
-            case 6:
-                if (onOffDly) break;
-                ssr.ardu = (switches.ardu)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffDly = GetSeqDly();
-                onOffState = 7;
-                break;
-            case 7:
-                if (onOffDly) break;
-                ssr.afe = (switches.afe)? 1: 0;
-                ssr.occ1 = (switches.occ1)? 1: 0;
-                ssr.occ2 = (switches.occ2)? 1: 0;
-                ssr.occ3 = (switches.occ3)? 1: 0;
-                RegsTable[Regs_CtrlSsr] = ssr.val;
-                UpdateSsr(ssr.val);
-                onOffState = 0;
-                break;
-        }
+
+    switch (onOffState){
+        case 0:
+            break;
+        case 1:
+            if (onOffDly) break;
+            ssrSdDly = SSR_SD_DLY;
+            ssr.esrL = (switches.esrL)? 1: 0;
+            RegsTable[Regs_CtrlSsr] = ssr.val;
+            UpdateSsr(ssr.val);
+            onOffDly = GetSeqDly();
+            onOffState = 2;
+            break;
+        case 2:
+            if (onOffDly) break;
+            ssr.esrR = (switches.esrR)? 1: 0;
+            ssr.dfRfu = (switches.dfRfu)? 1: 0;
+            ssr.abjb = (switches.abjb)? 1: 0;
+            ssr.service = (switches.service)? 1: 0;
+            RegsTable[Regs_CtrlSsr] = ssr.val;
+            UpdateSsr(ssr.val);
+            onOffDly = GetSeqDly();
+            onOffState = 7;
+            break;
+        case 3:
+//                if (onOffDly) break;
+//                ssr.ups2Occ = (switches.ups2Occ)? 1: 0;
+//                RegsTable[Regs_CtrlSsr_En] = ssr.val;
+//                UpdateSsr(ssr.val);
+//                onOffDly = GetSeqDly();
+//                onOffState = 4;
+            break;
+        case 4:
+//                if (onOffDly) break;
+//                ssr.heu = (switches.heu)? 1: 0;
+//                RegsTable[Regs_CtrlSsr] = ssr.val;
+//                UpdateSsr(ssr.val);
+//                onOffDly = GetSeqDly();
+//                onOffState = 5;
+            break;
+        case 5:
+//                if (onOffDly) break;
+//                ssr.dfc = (switches.dfc)? 1: 0;
+//                RegsTable[Regs_CtrlSsr] = ssr.val;
+//                UpdateSsr(ssr.val);
+//                onOffDly = GetSeqDly();
+//                onOffState = 6;
+            break;
+        case 6:
+//                if (onOffDly) break;
+//                ssr.ardu = (switches.ardu)? 1: 0;
+//                RegsTable[Regs_CtrlSsr] = ssr.val;
+//                UpdateSsr(ssr.val);
+//                onOffDly = GetSeqDly();
+//                onOffState = 7;
+            break;
+        case 7:
+            if (onOffDly) break;
+            //ssr.afe = (switches.afe)? 1: 0;
+            ssr.occ1 = (switches.occ1)? 1: 0;
+            ssr.occ2 = (switches.occ2)? 1: 0;
+            ssr.occ3 = (switches.occ3)? 1: 0;
+            RegsTable[Regs_CtrlSsr] = ssr.val;
+            UpdateSsr(ssr.val);
+            onOffState = 0;
+            break;
     }
-    else if (f9800){
-        switch (onOffState){
-            case 0:
-                break;
-            case 1:
-                if (onOffDly) break;
-                ssrEn.heu = (switchesEn.heu)? 1: 0;
-                RegsTable[Regs_CtrlSsr_En] = ssrEn.val;
-                UpdateSsr_En(ssrEn.val);
-                onOffDly = GetSeqDly();
-                onOffState = 2;
-                break;
-            case 2:
-                if (onOffDly) break;
-                ssrEn.dfc1 = (switchesEn.dfc1)? 1: 0;
-                ssrEn.dfc2 = (switchesEn.dfc2)? 1: 0;
-                ssrEn.dfc3 = (switchesEn.dfc3)? 1: 0;
-                ssrEn.dfc4 = (switchesEn.dfc4)? 1: 0;
-                RegsTable[Regs_CtrlSsr_En] = ssrEn.val;
-                UpdateSsr_En(ssrEn.val);
-                onOffDly = GetSeqDly();
-                onOffState = 3;
-                break;
-            case 3:
-                if (onOffDly) break;
-                ssrEn.ardu = (switchesEn.ardu)? 1: 0;
-                RegsTable[Regs_CtrlSsr_En] = ssrEn.val;
-                UpdateSsr_En(ssrEn.val);
-                onOffDly = GetSeqDly();
-                onOffState = 4;
-                break;
-            case 4:
-                if (onOffDly) break;
-                ssrEn.abjb = (switchesEn.abjb)? 1: 0;
-                ssrEn.service = (switchesEn.service)? 1: 0;
-                ssrEn.spare = (switchesEn.spare)? 1: 0;
-                RegsTable[Regs_CtrlSsr_En] = ssrEn.val;
-                UpdateSsr_En(ssrEn.val);
-                onOffState = 0;
-                break;
-        }
-    }
+    
+    
     
 }
 // read switches
@@ -994,10 +799,10 @@ void OrOpCmds(uint16_t address)
             RegsTable[address] &= 0x1FFF; // disable unwanted operation (Lamp test through communication)
             UpdateSsr(RegsTable[address]);
             break;
-        case Regs_CtrlSsr_En:
-            RegsTable[address] &= 0x1FF; // disable unwanted operation (Lamp test through communication)
-            UpdateSsr_En(RegsTable[address]);
-            break;
+//        case Regs_CtrlSsr_En:
+//            RegsTable[address] &= 0x1FF; // disable unwanted operation (Lamp test through communication)
+//            UpdateSsr_En(RegsTable[address]);
+//            break;
         case Regs_EraseClock:
             RegsTable[address] = (RegsTable[address] < 5) ? 5 : RegsTable[address];
             RegsTable[address] = (RegsTable[address] > 60) ? 60: RegsTable[address];
@@ -1075,10 +880,7 @@ void OrOpCmds(uint16_t address)
                 UpdateForcedFan(RegsTable[address]);
             break;
         case Regs_BattleShort:
-            if (f9408)
-            {
-                sc16Status.battleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;
-            }
+            fBattleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;
             break;
         case Regs_PowerDown:
         {   
@@ -1130,22 +932,22 @@ void UpdateSsr(uint16_t val)
     fUpdateSsr = true;
 }
 
-void UpdateSsr_En(uint16_t val)
-{
-    ssrEn.val = val;
-    
-    i2cArray[I2C2_74].P0 = ssrEn.ardu;
-    i2cArray[I2C2_74].P1 = ssrEn.dfc2;
-    i2cArray[I2C2_74].P2 = ssrEn.heu;
-    i2cArray[I2C2_74].P3 = ssrEn.dfc4;
-    i2cArray[I2C2_74].P4 = ssrEn.abjb;
-    i2cArray[I2C2_74].P7 = ssrEn.service;
-    i2cArray[I2C2_74].P11 = ssrEn.dfc1;
-    i2cArray[I2C2_74].P12 = ssrEn.spare;
-    i2cArray[I2C2_74].P13 = ssrEn.dfc3;
-    //SYS_CONSOLE_PRINT("reg: 0x%X, 0x%X\r\n", i2cArray[I2C2_74].val, reg.val);
-    fUpdateSsr = true;
-}
+//void UpdateSsr_En(uint16_t val)
+//{
+//    ssrEn.val = val;
+//    
+//    i2cArray[I2C2_74].P0 = ssrEn.ardu;
+//    i2cArray[I2C2_74].P1 = ssrEn.dfc2;
+//    i2cArray[I2C2_74].P2 = ssrEn.heu;
+//    i2cArray[I2C2_74].P3 = ssrEn.dfc4;
+//    i2cArray[I2C2_74].P4 = ssrEn.abjb;
+//    i2cArray[I2C2_74].P7 = ssrEn.service;
+//    i2cArray[I2C2_74].P11 = ssrEn.dfc1;
+//    i2cArray[I2C2_74].P12 = ssrEn.spare;
+//    i2cArray[I2C2_74].P13 = ssrEn.dfc3;
+//    //SYS_CONSOLE_PRINT("reg: 0x%X, 0x%X\r\n", i2cArray[I2C2_74].val, reg.val);
+//    fUpdateSsr = true;
+//}
 
 void OpSsr(void)
 {
@@ -1215,10 +1017,10 @@ void CheckSys(bool virtChange)
 
     ind = false;
     if (!ind){
-        Table28EnCheck[0] = ssr.heu && switches.heu;
-        Table28EnCheck[1] = ssr.esrA && switches.esrA;
-        Table28EnCheck[2] = ssr.esrB && switches.esrB;
-        Table28EnCheck[3] = ssr.cEsm && switches.cEsm;
+        //Table28EnCheck[0] = ssr.heu && switches.heu;
+        Table28EnCheck[1] = ssr.esrR && switches.esrR;
+        Table28EnCheck[2] = ssr.esrL && switches.esrL;
+        Table28EnCheck[3] = ssr.abjb && switches.abjb;
         for (i=0; i< sizeof(Table28V); i++)
         if (Table28EnCheck[i] && ((RegsTable[Table28V[i]] < LIMIT_28V_L)||(RegsTable[Table28V[i]] > LIMIT_28V_H)))
         {
@@ -1229,7 +1031,7 @@ void CheckSys(bool virtChange)
     qapPsuFail  = ind;
     leds.psCbFail = ind || ((RegsTable[Regs_MainAndCB] & 0x7E) != 0x7E);
     leds.hvpFail = 0;
-    leds.sensorStackTemp = ((RegsTable[Regs_ExtStatus] & 0x2A) > 0);
+    //leds.sensorStackTemp = ((RegsTable[Regs_ExtStatus] & 0x2A) > 0);
     ind = false;
     for (i=0; i< sizeof(FanReg); i++)
         if (RegsTable[FanReg[i]] < LIMIT_FAN)
@@ -1249,10 +1051,10 @@ void CheckSys(bool virtChange)
     //leds.heu = !extStatus.heuOk; //not OK LED
 
 
-    leds.esrB = ssr.esrB && switches.esrB;
-    leds.esrA = ssr.esrA && switches.esrA;
-    leds.hfMon = leds.esrA && ssr.hfMon && switches.hfMon;
-    leds.abjb = leds.esrB && switches.abjb;
+    leds.esrL = ssr.esrL && switches.esrL;
+    leds.esrR = ssr.esrR && switches.esrR;
+    leds.dfRfu = leds.esrR && ssr.dfRfu && switches.dfRfu;
+    leds.abjb = leds.esrL && switches.abjb;
     leds.mainOnOff = onState;
     leds.spare = 0;
 
@@ -1277,22 +1079,22 @@ void CheckSys(bool virtChange)
                 qapInd1.esrC_OverTemp;*/
 
 
-    qapInd1.dfc1OverTemp = sc16Status.dfc1OverTemp;
-    qapInd1.dfc2OverTemp = sc16Status.dfc2OverTemp;
-    qapInd1.arduOverTemp = sc16Status.arduOverTemp;
-    qapInd1.dfc1CritTemp = sc16Status.dfc1CritTemp;
-    qapInd1.dfc2CritTemp = sc16Status.dfc2CritTemp;
-    qapInd1.arduCritTemp = sc16Status.arduCritTemp;
+//    qapInd1.dfc1OverTemp = sc16Status.dfc1OverTemp;
+//    qapInd1.dfc2OverTemp = sc16Status.dfc2OverTemp;
+//    qapInd1.arduOverTemp = sc16Status.arduOverTemp;
+//    qapInd1.dfc1CritTemp = sc16Status.dfc1CritTemp;
+//    qapInd1.dfc2CritTemp = sc16Status.dfc2CritTemp;
+//    qapInd1.arduCritTemp = sc16Status.arduCritTemp;
 
     leds.systemOk = (!leakage) && (!leakage2) && 
                     (!leds.psCbFail) &&
                     (leds.ok) &&
                     (!leds.fail) 
 #ifndef PART_TEST 
-                    && (!leds.sensorStackTemp) &&
-                    (!leds.fanIndication) &&
+                    //&& (!leds.sensorStackTemp) &&
+                    && (!leds.fanIndication)
                     /*(!fOverTemp) &&*/
-                    (leds.heu)
+                    //(leds.heu)
 #endif
                      ;
 
@@ -1351,14 +1153,14 @@ void CheckSys(bool virtChange)
         leds.fail = 1;
         leds.psCbFail = 1;
         leds.ok = 1;
-        leds.sensorStackTemp = 1;
+        //leds.sensorStackTemp = 1;
         leds.hvpFail = 1;
         leds.fanIndication = 1;
-        leds.heu = 1;
-        if (!switches.esrB) leds.esrB = 1;
+        //leds.heu = 1;
+        if (!switches.esrL) leds.esrL = 1;
         leds.systemOk = 1;
-        if (!switches.hfMon) leds.hfMon = 1;
-        if (!switches.esrA) leds.esrA = 1;
+        if (!switches.dfRfu) leds.dfRfu = 1;
+        if (!switches.esrR) leds.esrR = 1;
         if (!switches.abjb) leds.abjb = 1;
         leds.spare = 1;
         leds.mainOnOff = 1;
@@ -1412,15 +1214,9 @@ void PreResetSystem(void)
 
 void ResetSystem(void)
 {
-    if (f9408){
-        RegsTable[Regs_CtrlSsr] = 0;
-        UpdateSsr(0);
+    RegsTable[Regs_CtrlSsr] = 0;
+    UpdateSsr(0);
         
-    }
-    else if(f9800){
-        RegsTable[Regs_CtrlSsr_En] = 0;
-        UpdateSsr_En(0);
-    }
     
     if ((RegsTable[Regs_RstSysDly] == 0)||(RegsTable[Regs_RstSysDly] == 0xFFFF))
         ResetSysDly = 3000;
@@ -1622,11 +1418,11 @@ void CheckDependencies(bool virtChange)
     }
     
     
-    ssr.ardu = ssr.ardu &&(!overUnderVolt._3pPlatform);
-    ssr.dfc = ssr.dfc && (!overUnderVolt._3pPlatform);
-    ssr.heu = ssr.heu && (!overUnderVolt._3pPlatform);
+    //ssr.ardu = ssr.ardu &&(!overUnderVolt._3pPlatform);
+    //ssr.dfc = ssr.dfc && (!overUnderVolt._3pPlatform);
+    //ssr.heu = ssr.heu && (!overUnderVolt._3pPlatform);
     ssr.cEsm = ssr.cEsm && (!overUnderVolt._1pPlatform);
-    ssr.afe = ssr.afe && (!overUnderVolt.ups3);
+    //ssr.afe = ssr.afe && (!overUnderVolt.ups3);
     ssr.esrA = ssr.esrA && ((!overUnderVolt.ups1) || (!overUnderVolt.ups2) || (!overUnderVolt._1pPlatform) 
             || (!overUnderVolt._3pPlatform));
     ssr.esrB = ssr.esrB && ((!overUnderVolt.ups1) || (!overUnderVolt._1pPlatform));

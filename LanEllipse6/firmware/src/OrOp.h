@@ -107,41 +107,49 @@ extern "C" {
     
     typedef union{
         struct{
-            uint16_t ardu:1;
-            uint16_t dfc:1;
-            uint16_t heu:1;
-            uint16_t cEsm:1;
-            uint16_t afe:1;
-            uint16_t esrA:1;
-            uint16_t esrB:1;
+            uint16_t na1:3;
+//            uint16_t ardu:1;
+//            uint16_t dfc:1;
+//            uint16_t heu:1;
+//            uint16_t cEsm:1;
+            uint16_t abjb:1;
+//            uint16_t afe:1;
+            uint16_t na2:1;
+            uint16_t esrR:1;
+            uint16_t esrL:1;
             uint16_t service:1;
-            uint16_t ups2Occ:1;
+//            uint16_t ups2Occ:1;
+            uint16_t na3:1;
             uint16_t occ1:1;
             uint16_t occ2:1;
             uint16_t occ3:1;
-            uint16_t hfMon:1;
+//            uint16_t hfMon:1;
+            uint16_t dfRfu:1;
             uint16_t lampTest:1;
-            uint16_t spare:3;
+            uint16_t spare:2;
         };
         uint16_t val;
     }Ssr;
     
     typedef union{
         struct{
-            uint16_t ardu:1;
-            uint16_t dfc:1;
-            uint16_t heu:1;
-            uint16_t cEsm:1;
-            uint16_t afe:1;
-            uint16_t esrA:1;
-            uint16_t esrB:1;
+//            uint16_t ardu:1;
+//            uint16_t dfc:1;
+//            uint16_t heu:1;
+            uint16_t na1:3;
+            uint16_t abjb:1;
+            uint16_t na2:1;
+            uint16_t esrR:1;
+            uint16_t esrL:1;
             uint16_t service:1;
-            uint16_t ups2Occ:1;
+            //uint16_t ups2Occ:1;
+            uint16_t na3:1;
             uint16_t occ1:1;
             uint16_t occ2:1;
             uint16_t occ3:1;
-            uint16_t hfMon:1;
-            uint16_t abjb:1;
+            //uint16_t hfMon:1;
+            uint16_t dfRfu:1;
+            uint16_t spare:1;
             uint16_t gpu:1;
             uint16_t lampTest:1;
         };
@@ -178,12 +186,12 @@ extern "C" {
             uint16_t hvpFail:1;
             uint16_t systemOk:1;
             uint16_t psCbFail:1;
-            uint16_t sensorStackTemp:1;
+            uint16_t sensorStackTemp_NA:1;
             uint16_t fanIndication:1;
-            uint16_t heu:1;
-            uint16_t esrB:1;
-            uint16_t hfMon:1;
-            uint16_t esrA:1;
+            uint16_t heu_NA:1;
+            uint16_t esrL:1;
+            uint16_t dfRfu:1;
+            uint16_t esrR:1;
             uint16_t abjb:1;
             uint16_t spare:1;
             uint16_t mainOnOff:1;

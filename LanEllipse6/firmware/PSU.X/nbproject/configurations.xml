@@ -452,7 +452,6 @@
       <itemPath>../src/OrDs1682.h</itemPath>
       <itemPath>../src/Or24Fc512.h</itemPath>
       <itemPath>../src/OrLimits.h</itemPath>
-      <itemPath>../src/OrSc16is741.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -743,7 +742,6 @@
       <itemPath>../src/OrLm75.c</itemPath>
       <itemPath>../src/OrDs1682.c</itemPath>
       <itemPath>../src/Or24Fc512.c</itemPath>
-      <itemPath>../src/OrSc16is741.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

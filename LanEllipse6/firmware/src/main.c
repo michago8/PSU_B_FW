@@ -34,7 +34,7 @@
 #include "OrEmc2305.h"
 #include "OrLm75.h"
 #include "OrOp.h"
-#include "OrSc16is741.h"
+//#include "OrSc16is741.h"
 
 // *****************************************************************************
 // *****************************************************************************
@@ -93,7 +93,7 @@ int main ( void )
         
         OrEmcProc(OrOpIs9408());
         
-        OrSc16_Proc();
+        //OrSc16_Proc();
     }
 
     /* Execution should not come here during normal operation */

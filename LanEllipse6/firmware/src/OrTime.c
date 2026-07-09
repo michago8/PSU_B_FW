@@ -5,7 +5,7 @@
 #include "OrI2c.h"
 #include "OrEmc2305.h"
 #include "OrOp.h"
-#include "OrSc16is741.h"
+//#include "OrSc16is741.h"
 #include "OrParser.h"
 #include "OrTime.h"
 
@@ -48,7 +48,7 @@ void OrTimeCallback(uintptr_t context)
     OrOpPeriodic();
     OrEmcPeriodic();
     
-    OrSc16_Periodic();
+    //OrSc16_Periodic();
     
     OrParserPeriodic();
     
