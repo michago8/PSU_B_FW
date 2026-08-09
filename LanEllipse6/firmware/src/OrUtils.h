@@ -41,7 +41,7 @@ extern "C" {
         Regs_HeuV_NA,
         Regs_EsrRV,
         Regs_EsrLV,
-        Regs_CesmV,
+        Regs_EsrR_Ps3V,/*CESM v*/
         Regs_UpsEsrR_A,
         Regs_Ups2EsrA_A_NA,
         Regs_Ups2OccA_NA,
@@ -51,7 +51,7 @@ extern "C" {
         Regs_DirectEsrL_A,
         Regs_EsrLPs2A,          //0x20
         Regs_ServiceA,
-        Regs_EsmA,
+        Regs_EsrR_Ps3A,
         Regs_AbjbA,
         Regs_Occ3A,
         Regs_EsrA6KwA_NA,
@@ -65,8 +65,8 @@ extern "C" {
         Regs_EsrR28A,
         Regs_HeuA_NA,
         Regs_UpsEsrL_A,
-        Regs_IsometerDirect,          //0x30
-        Regs_IsoDirectBits,
+        Regs_IsometerDirectStatus,          //0x30
+        Regs_IsoDirectControl,
         Regs_Isometer3p_NA,
         Regs_IsoBits3p_NA,
         Regs_TempEsrL_U,

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<project>                                  
+  <executable name="dist/LanEllipse6_conf/production/PSU.X.production.elf">                 
+    <memory name="program">                 
+      <units>bytes</units>                 
+      <length>531968</length>                 
+      <used>374636</used>                     
+      <free>157332</free>                     
+    </memory>                              
+    <memory name="data">              
+      <units>bytes</units>                 
+      <length>131072</length>                 
+      <used>7689</used>                     
+      <free>123383</free>                     
+    </memory>                              
+  </executable>                            
+</project>                                 

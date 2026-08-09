@@ -53,8 +53,10 @@ extern "C" {
 #define LIMIT_OCC3      6//Amp
 #define LIMIT_ESRA1P    16//Amp
     
-    
-    
+//TBD
+#define LIMIT_DIRECT_ESR_L  0
+#define LIMIT_DFRFU         0
+#define LIMIT_UPS_ESR_R     0   
     
 
 

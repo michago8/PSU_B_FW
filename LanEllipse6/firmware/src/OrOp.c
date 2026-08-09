@@ -20,7 +20,7 @@
 
 enum{
     a_0p18, a_0p0198b_1650, a_0p08, a_0p08c_2, a_0p08c_3, a_0p08b_1650, a_0p08b_1650c_2, a_0p08b_1650c_3, a_0p08b_1698, a_0p08b_1698c_3, a_0p0723, a_0p0322b_1650,
-    a_0p08b_X1c_3, a_0p08b_X5c_3, a_0p08b_X6c_2, a_0p08b_X2, a_0p08b_X3, a_0p08b_X4
+    a_0p08b_X1c_2, a_0p08b_X5c_3, a_0p08b_X6, a_0p08b_X2, a_0p08b_X3, a_0p08b_X4
 };
 
 static void UpdateSsr(uint16_t val);
@@ -107,7 +107,7 @@ static uint16_t resetDly = 0, cap = 0, delta = 0, fFreqLife = 100, freq = 125, r
         ResetSysDly = 0, ResetSysOffDly = 0, isoDly = 0, isoDly2 = 0;
 static uint8_t capIn = 0, readState = 0, fanState = 0, isoState = 0, isoState2 = 0, onOffState = 0;
 static uint16_t eraseLimit, eraseCtr = 0, powerDownCtr = 0;
-static uint16_t t1Ardu = 0, t1Dfc1 = 0, t1Dfc2 = 0, t2Ardu = 0, t2Dfc1 = 0, t2Dfc2 = 0, t1Limit;
+static uint16_t /*t1Ardu = 0, t1Dfc1 = 0, t1Dfc2 = 0, t2Ardu = 0, t2Dfc1 = 0, t2Dfc2 = 0, */t1Limit;
 static uint16_t ssrSdDly = SSR_SD_DLY;
 
 void InitRst(void)
@@ -549,12 +549,12 @@ void ReadIntI04(void)
         fStart = false; // we update with an interrupt leg but we need to get start status
         if (!OrTcaReadInput(cpSwU78.address, cpSwU78.ch, &i2cArray[I2C1_77].val))
         {
-            mainAndCb.ups3          = !i2cArray[I2C1_77].P5;
-            mainAndCb._3pPlatform   = !i2cArray[I2C1_77].P6;
-            mainAndCb.ups1          = !i2cArray[I2C1_77].P7;
-            mainAndCb.ups2          = !i2cArray[I2C1_77].P10;
-            mainAndCb._1pPlatform   = !i2cArray[I2C1_77].P11;
-            mainAndCb.ups4          = !i2cArray[I2C1_77].P12;
+            //mainAndCb.ups3          = !i2cArray[I2C1_77].P5;
+            //mainAndCb._3pPlatform   = !i2cArray[I2C1_77].P6;
+            //mainAndCb.ups1          = !i2cArray[I2C1_77].P7;
+            //mainAndCb.ups2          = !i2cArray[I2C1_77].P10;
+            mainAndCb.ups      = !i2cArray[I2C1_77].P11;
+            //mainAndCb.ups4          = !i2cArray[I2C1_77].P12;
             switches.lampTest       = !i2cArray[I2C1_77].P13;
             mainAndCb.main          = i2cArray[I2C1_77].P14; 
             //RegsTable[Regs_3pPhase] = i2cArray[I2C1_77].P15;
@@ -846,7 +846,7 @@ void OrOpCmds(uint16_t address)
                 Or24Write();
             }
             break;
-        case Regs_IsoDirectBits:
+        case Regs_IsoDirectControl:
             if (RegsTable[address] == 1) //Test
             {
                 RegsTable[address] = 0;
@@ -966,7 +966,7 @@ void CheckSys(bool virtChange)
     const uint8_t Table115V[] = {Regs_UpsV, Regs_DirectV, /*Regs_Ups2V, Regs_Ups3V, Regs_Ups4V*/};
     const uint8_t Table60Hz[] = {/*Regs_3pL1F, Regs_3pL2F, Regs_3pL3F, */Regs_UpsF, 
                                 Regs_DirectF,/* Regs_Ups2F, Regs_Ups3F, Regs_Ups4F*/};
-    const uint8_t Table28V[] =  {/*Regs_HeuV,*/ Regs_EsrRV, Regs_EsrLV, Regs_CesmV};
+    const uint8_t Table28V[] =  {/*Regs_HeuV,*/ Regs_EsrRV, Regs_EsrLV, Regs_EsrR_Ps3V};
     const uint8_t TableA[] = TABLE_A;
     const uint8_t TableALimit[] = TABLE_A_LIMIT;
     const uint16_t TableAOut[] = TABLE_A_OUT;
@@ -1322,10 +1322,10 @@ uint16 Calc(uint16_t an, uint8_t param)
             else
                 val = 0;
             break;
-        case a_0p08b_X1c_3:
+        case a_0p08b_X1c_2:
             if (onState || powerDownCtr)
                 if (an > calibX.x[0])
-                    val = (uint32_t)((an-calibX.x[0])*1748 + 32768) >> 16; // (an - x1) x 0.08/3 with rounding.
+                    val = (uint32_t)((an-calibX.x[0])*2621 + 32768) >> 16; // (an - x1) x 0.08/2 with rounding.
                 else
                     val = 0;
             else{
@@ -1346,10 +1346,10 @@ uint16 Calc(uint16_t an, uint8_t param)
                 //SYS_CONSOLE_PRINT("x5: %u, val: %u\r\n", x5, val);
             }
             break;
-        case a_0p08b_X6c_2:
+        case a_0p08b_X6:
             if (onState || powerDownCtr)
                 if (an > calibX.x[5])
-                    val = (uint32_t)((an-calibX.x[5])*2621 + 32768) >> 16; // (an - x6) x 0.08/2 with rounding.
+                    val = (uint32_t)((an-calibX.x[5])*5243 + 32768) >> 16; // (an - x6) x 0.08 with rounding.
                 else
                     val = 0;
             else{
@@ -1421,17 +1421,17 @@ void CheckDependencies(bool virtChange)
     //ssr.ardu = ssr.ardu &&(!overUnderVolt._3pPlatform);
     //ssr.dfc = ssr.dfc && (!overUnderVolt._3pPlatform);
     //ssr.heu = ssr.heu && (!overUnderVolt._3pPlatform);
-    ssr.cEsm = ssr.cEsm && (!overUnderVolt._1pPlatform);
+    //ssr.cEsm = ssr.cEsm && (!overUnderVolt._1pPlatform);
     //ssr.afe = ssr.afe && (!overUnderVolt.ups3);
-    ssr.esrA = ssr.esrA && ((!overUnderVolt.ups1) || (!overUnderVolt.ups2) || (!overUnderVolt._1pPlatform) 
+    ssr.esrR = ssr.esrR && ((!overUnderVolt.ups1) || (!overUnderVolt.ups2) || (!overUnderVolt._1pPlatform) 
             || (!overUnderVolt._3pPlatform));
-    ssr.esrB = ssr.esrB && ((!overUnderVolt.ups1) || (!overUnderVolt._1pPlatform));
+    ssr.esrL = ssr.esrL && ((!overUnderVolt.ups1) || (!overUnderVolt._1pPlatform));
     ssr.service = ssr.service && (!overUnderVolt._1pPlatform);
-    ssr.ups2Occ = ssr.ups2Occ && (!overUnderVolt.ups2);
+    //ssr.ups2Occ = ssr.ups2Occ && (!overUnderVolt.ups2);
     ssr.occ1 = ssr.occ1 && (!overUnderVolt.ups4);
     ssr.occ2 = ssr.occ2 && (!overUnderVolt.ups4);
     ssr.occ3 = ssr.occ3 && (!overUnderVolt.ups4);
-    ssr.hfMon = ssr.hfMon && ssr.esrA;
+    ssr.dfRfu = ssr.dfRfu && ssr.esrR;
     
     virtualSsr.val = virtualSsr.val | (lastState.val & (~ssr.val)); //if SSR turned off turn on virtual indication
     
@@ -1554,11 +1554,11 @@ void ReadProc(void)
             //ReadCalc(Regs_ArduL1A, AN1, a_0p08);
             //ReadCalc(Regs_EsmA, AN2, a_0p08c_2); //C_ECM
             //ReadCalc(Regs_3pL1V, AN3, a_0p18);
-            ReadCalc(Regs_IsometerDirect, AN5, a_0p0723);
+            ReadCalc(Regs_IsometerDirectStatus, AN5, a_0p0723);
             //ReadCalc(Regs_HeuV, AN7, a_0p0198b_1650);
             //SYS_CONSOLE_PRINT("an, calc: %u, %u\r\n", an, RegsTable[Regs_3pL1V_En]);
-            leakage = (RegsTable[Regs_IsometerDirect] < LIMIT_LEAK);
-            leakageCritic = (RegsTable[Regs_IsometerDirect] < LIMIT_LEAK_CRT);
+            leakage = (RegsTable[Regs_IsometerDirectStatus] < LIMIT_LEAK);
+            leakageCritic = (RegsTable[Regs_IsometerDirectStatus] < LIMIT_LEAK_CRT);
             if (leakageCritic)
             {
                 RegsTable[Regs_CtrlSsr] = 0;
@@ -1576,7 +1576,7 @@ void ReadProc(void)
             break;          
         case 3: // AN P = 1, PROC P = 0 
             if (readDly) break;
-            ReadCalc(Regs_UpsEsrL_A, AN1, a_0p08c_3);
+            ReadCalc(Regs_UpsEsrL_A, AN1, a_0p08);
             ReadCalc(Regs_Occ1A, AN2, a_0p08c_2);
             //ReadCalc(Regs_3pL2V, AN3, a_0p18);
             ReadCalc(Regs_TempEsrL_U, AN5, a_0p0322b_1650);
@@ -1593,7 +1593,7 @@ void ReadProc(void)
             ReadCalc(Regs_Occ3A, AN4, a_0p08c_2);
             //ReadCalc(Regs_TempEsrL_F, AN5, a_0p0322b_1650);
             //ReadCalc(Regs_TempEsrC_D, AN6, a_0p0322b_1650);
-            ReadCalc(Regs_CesmV, AN7, a_0p0198b_1650);
+            ReadCalc(Regs_EsrR_Ps3V, AN7, a_0p0198b_1650);
             UpdateMuxConfig2(3,0,3);
             readDly = 500;
             readState++;
@@ -1652,7 +1652,7 @@ void ReadProc(void)
             break;
         case 10: // AN P = 0, PROC P = 2 
             if (readDly) break;
-            ReadCalc(Regs_EsmA, AN2, a_0p08b_X6c_2); //C_ECM
+            ReadCalc(Regs_EsrR_Ps3A, AN2, a_0p08b_X6); //C_ECM
             UpdateMuxConfig2(3,2,3);
             readDly = 100;
             readState = 12;
@@ -1708,7 +1708,7 @@ void ReadProc(void)
             break;
         case 16: // AN P = 7, PROC P = 1 
             if (readDly) break;
-            ReadCalc(Regs_DfRfuA, AN1, a_0p08b_X1c_3);
+            ReadCalc(Regs_DfRfuA, AN1, a_0p08b_X1c_2);
             UpdateMuxConfig2(3,0,1);
             readDly = 50;
             capIn = 0;

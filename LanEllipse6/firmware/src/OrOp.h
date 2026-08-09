@@ -19,22 +19,22 @@ extern "C" {
     
 #define TABLE_A     {/*Regs_ArduL1A, Regs_Dfc12L1A, Regs_HeuA,*/\
                     Regs_EsrLPs2A/*?ESR B - 28V*/, Regs_DirectEsrL_A,/*?ESR B -1P*/Regs_DfRfuA,\
-                    Regs_EsmA, /*Regs_Ups2EsrA_A, Regs_Ups2OccA,*/\
+                    Regs_AbjbA, /*Regs_Ups2EsrA_A, Regs_Ups2OccA,*/\
                     Regs_UpsEsrR_A, Regs_EsrR28A, /*Regs_AfeA,*/\
                     Regs_Occ1A, Regs_Occ2A, Regs_Occ3A,\
                     Regs_ServiceA, /*Regs_EsrA6KwA*//*?ESR A -1P*/}
-#define TABLE_A_LIMIT {LIMIT_ARDU, LIMIT_DFC, LIMIT_HEU,\
-                    LIMIT_ESR_B28V, LIMIT_ESR_B1P, LIMIT_HFMON,\
-                    LIMIT_CESM, LIMIT_ESRAUPS2, LIMIT_UPS2OOC,\
-                    LIMIT_ESRAUPS1, LIMIT_ESRA28V, LIMIT_AFE,\
+#define TABLE_A_LIMIT {/*LIMIT_ARDU, LIMIT_DFC, LIMIT_HEU,*/\
+                    LIMIT_ESR_B28V, LIMIT_DIRECT_ESR_L, LIMIT_DFRFU,\
+                    LIMIT_ABJB, /*LIMIT_ESRAUPS2, LIMIT_UPS2OOC,*/\
+                    LIMIT_UPS_ESR_R, LIMIT_ESRA28V, /*LIMIT_AFE,*/\
                     LIMIT_OCC1, LIMIT_OCC2, LIMIT_OCC3,\
-                    LIMIT_SERVICE, LIMIT_ESRA1P}
-#define TABLE_A_OUT { E_ARDU, E_DFC, E_HEU,\
-                    E_ESRB, E_ESRB, E_HFMON,\
-                    E_CESM, E_ESRA, E_UPS2OOC,\
-                    E_ESRA, E_ESRA, E_AFE,\
+                    LIMIT_SERVICE/*, LIMIT_ESRA1P*/}
+#define TABLE_A_OUT { /*E_ARDU, E_DFC, E_HEU,*/\
+                    E_ESR_L, E_ESR_L, E_DFRFU,\
+                    E_ABJB, /*E_ESRA, E_UPS2OOC,*/\
+                    E_ESR_R, E_ESR_R,/* E_AFE,*/\
                     E_OCC1, E_OCC2, E_OCC3,\
-                    E_SERVICE, E_ESRA}
+                    E_SERVICE}
     
 #define TABLE_A_EN {Regs_ArduL1A_En, Regs_ArduL2A_En, Regs_ArduL3A_En,\
                     Regs_Dfc1L1A_En, Regs_Dfc1L2A_En, Regs_Dfc1L3A_En,\
@@ -56,19 +56,19 @@ extern "C" {
                     E_ABJB_EN, E_HEU_EN}
     
     enum{
-        E_ARDU,
-        E_DFC,
-        E_HEU       = 4,
-        E_CESM      = 8,
-        E_AFE       = 0x10,
-        E_ESRA      = 0x20,
-        E_ESRB      = 0x40,
+        //E_ARDU,
+        //E_DFC,
+        //E_HEU     = 4,
+        E_ABJB      = 8,
+        //E_AFE     = 0x10,
+        E_ESR_R     = 0x20,
+        E_ESR_L     = 0x40,
         E_SERVICE   = 0x80,
-        E_UPS2OOC   = 0x100,
+        //E_UPS2OOC   = 0x100,
         E_OCC1      = 0x200,
         E_OCC2      = 0x400,
         E_OCC3      = 0x800,
-        E_HFMON     = 0x1000,
+        E_DFRFU     = 0x1000,
     };
     
     enum{
@@ -159,12 +159,12 @@ extern "C" {
     typedef union{
         struct{
             uint16_t main:1;
-            uint16_t _3pPlatform:1;
-            uint16_t _1pPlatform:1;
-            uint16_t ups1:1;
-            uint16_t ups2:1;
-            uint16_t ups3:1;
-            uint16_t ups4:1;
+            uint16_t _3pPlatform_NA:1;
+            uint16_t /*_1pPlatform*/ups:1;
+            uint16_t /*ups1*/direct:1;
+            uint16_t ups2_NA:1;
+            uint16_t ups3_NA:1;
+            uint16_t ups4_NA:1;
             uint16_t spare:9;
         };
         uint16_t val;
