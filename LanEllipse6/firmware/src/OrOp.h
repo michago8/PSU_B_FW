@@ -215,12 +215,12 @@ extern "C" {
     
     typedef union{
         struct{
-            uint16_t _3pPlatform:1;
-            uint16_t _1pPlatform:1;
-            uint16_t ups1:1;
-            uint16_t ups2:1;
-            uint16_t ups3:1;
-            uint16_t ups4:1;
+            uint16_t _3pPlatform_NA:1;
+            uint16_t ups/*_1pPlatform*/:1;
+            uint16_t direct/*ups1*/:1;
+            uint16_t ups2_NA:1;
+            uint16_t ups3_NA:1;
+            uint16_t ups4_NA:1;
             uint16_t spare:10;
         };
         uint16_t val;
@@ -287,22 +287,22 @@ extern "C" {
     
     typedef union{
         struct{
-            uint16_t arduOverTemp:1;
-            uint16_t heuOverTemp:1;
-            uint16_t psuOverTemp:1;
-            uint16_t dfc1OverTemp:1;
-            uint16_t dfc2OverTemp:1;
-            uint16_t esrC_OverTemp:1;
-            uint16_t esrB_OverTemp:1;
-            uint16_t esrA_OverTemp:1;
+            uint16_t arduOverTemp_NA:1;
+            uint16_t heuOverTemp_NA:1;
+            uint16_t psuOverTemp_NA:1;
+            uint16_t dfc1OverTemp_NA:1;
+            uint16_t dfc2OverTemp_NA:1;
+            uint16_t esrC_OverTemp_NA:1;
+            uint16_t esrL_OverTemp:1;
+            uint16_t esrR_OverTemp:1;
             uint16_t acInFail:1;
             uint16_t psuFail:1;
-            uint16_t arduCritTemp:1;
-            uint16_t esrC_Fan:1;
-            uint16_t esrB_Fan:1;
-            uint16_t esrA_Fan:1;
-            uint16_t dfc1CritTemp:1;
-            uint16_t dfc2CritTemp:1;
+            uint16_t arduCritTemp_NA:1;
+            uint16_t esrC_Fan_NA:1;
+            uint16_t esrL_Fan:1;
+            uint16_t esrR_Fan:1;
+            uint16_t dfc1CritTemp_NA:1;
+            uint16_t dfc2CritTemp_NA:1;
         };
         uint16_t val;
     }QapInd1;
@@ -326,8 +326,8 @@ extern "C" {
             uint32_t acInFail:1;
             uint32_t psuFail:1;
             uint32_t psuOverTemp:1;
-            uint32_t esrA_OverTemp:1;
-            uint32_t esrB_OverTemp:1;
+            uint32_t esrR_OverTemp:1;
+            uint32_t esrL_OverTemp:1;
             uint32_t esrC_OverTemp:1;
             uint32_t arduOk:1;
             uint32_t heuOk:1;
@@ -338,8 +338,8 @@ extern "C" {
             uint32_t acOn:1;
             uint32_t systemOk:1;
             uint32_t acIn:1;
-            uint32_t esrA_Fan:1;
-            uint32_t esrB_Fan:1;
+            uint32_t esrR_Fan:1;
+            uint32_t esrL_Fan:1;
             uint32_t esrC_Fan:1;
             uint32_t dfc1CritTemp:1;
             uint32_t dfc2CritTemp:1;

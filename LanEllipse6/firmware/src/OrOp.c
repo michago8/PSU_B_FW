@@ -55,7 +55,7 @@ static void PreResetProc(void);
 static void LampTestHandle(void);
 static void IsoTestInit(void);
 static void IsoTestProc(void);
-static void ReadArduDfcOk(void);
+//static void ReadArduDfcOk(void);
 static void UpdateTempTimers(void);
 static uint16_t GetSeqDly(void);
 static void ShutDownProc(void);
@@ -84,11 +84,11 @@ static Ssr_En ssrEn = {.val = 0};
 static Switches switches = {.val = 0};
 static Switches_En switchesEn = {.val = 0};
 static SysErrors_En sysErrorsEn = {.val = 0}; 
-static PhaseStatus phaseStatus = {.val = 0};
+//static PhaseStatus phaseStatus = {.val = 0};
 //static PhaseStatus_En phaseStatusEn = {.val = 0};
 static ExtStatus extStatus = {.val = 0};
 static QapInd1 qapInd1 = {.val = 0};
-static QapInd2 qapInd2 = {.val = 0};
+//static QapInd2 qapInd2 = {.val = 0};
 static QapLeds qapLeds = {.val = 0};
 static OverUnderVolt overUnderVolt = {.val = 0};
 static void CommRstProc(void);
@@ -171,8 +171,8 @@ void OrOpInit(void)
     RegsTable[Regs_VerL] = VERSION_L;
     RegsTable[Regs_EraseClock] = 10;
     eraseLimit = RegsTable[Regs_EraseClock] * 1000;
-    RegsTable[Regs_BattleT1] = 5;
-    t1Limit = 60 * RegsTable[Regs_BattleT1];
+    RegsTable[Regs_OverTempT1] = 5;
+    t1Limit = 60 * RegsTable[Regs_OverTempT1];
     ICAP2_Enable();
     TMR2_Start();
     Or24Read();
@@ -244,7 +244,7 @@ void OrOpProc(void)
         ReadTemp();
         //cap = ICAP2_CaptureBufferRead();
         //SYS_CONSOLE_PRINT("cap, delta, freq: %d, %d, %d\r\n", cap, delta, freq);
-        ReadArduDfcOk();
+        //ReadArduDfcOk();
         
         UpdateTempTimers();
         //SYS_CONSOLE_PRINT("ARDU T1, limit, ARDU T2: %d, %d, %d\r\n", t1Ardu, t1Limit, t2Ardu);
@@ -319,22 +319,22 @@ void IsoTest2Init(void)
     UpdateMuxConfig2(0,8,3);
     readState = (f9408)? 11: 15;
 }
-void ReadArduDfcOk(void)
-{
-    ConvPort cpU81 = convPortTable[I2C2_76];
-    ConvPort cpU77 = convPortTable[I2C1_76];
-    if (!OrTcaReadInput(cpU81.address, cpU81.ch, &i2cArray[I2C2_76].val))
-    {
-        qapInd2.dfc1Ok = !i2cArray[I2C2_76].P14;
-        qapInd2.dfc2Ok = !i2cArray[I2C2_76].P15;
-    }
-    if (!OrTcaReadInput(cpU77.address, cpU77.ch, &i2cArray[I2C1_76].val))
-    {
-        qapInd2.arduOk = !i2cArray[I2C1_76].P15;
-    }
-    RegsTable[Regs_QapInd2] = qapInd2.val;
-    //qadInd2
-}
+//void ReadArduDfcOk(void)
+//{
+//    ConvPort cpU81 = convPortTable[I2C2_76];
+//    ConvPort cpU77 = convPortTable[I2C1_76];
+//    if (!OrTcaReadInput(cpU81.address, cpU81.ch, &i2cArray[I2C2_76].val))
+//    {
+//        qapInd2.dfc1Ok = !i2cArray[I2C2_76].P14;
+//        qapInd2.dfc2Ok = !i2cArray[I2C2_76].P15;
+//    }
+//    if (!OrTcaReadInput(cpU77.address, cpU77.ch, &i2cArray[I2C1_76].val))
+//    {
+//        qapInd2.arduOk = !i2cArray[I2C1_76].P15;
+//    }
+//    RegsTable[Regs_QapInd2] = qapInd2.val;
+//    //qadInd2
+//}
 void IsoTestProc(void)
 {
     ConvPort cpSwU81 = convPortTable[I2C2_76];
@@ -814,7 +814,7 @@ void OrOpCmds(uint16_t address)
         case Regs_TemH_En:
                 WriteTem_En();
             break;
-        case Regs_BattleT1:
+        case Regs_OverTempT1:
             RegsTable[address] = (RegsTable[address] < 1) ? 1 : RegsTable[address];
             RegsTable[address] = (RegsTable[address] > 10) ? 10: RegsTable[address];
             t1Limit = 60 * RegsTable[address];
@@ -987,7 +987,7 @@ void CheckSys(bool virtChange)
 //        phaseStatus._3p1 = (RegsTable[Table208V[0]] < LIMIT_LIVE_PH);
 //        phaseStatus._3p2 = (RegsTable[Table208V[1]] < LIMIT_LIVE_PH);
 //        phaseStatus._3p3 = (RegsTable[Table208V[2]] < LIMIT_LIVE_PH);
-    RegsTable[Regs_3PhaseStatus] = phaseStatus.val;
+    //RegsTable[Regs_3PhaseStatus] = phaseStatus.val;
     ind = false;
 
     for (i=0; i< sizeof(Table115V); i++){
@@ -996,8 +996,8 @@ void CheckSys(bool virtChange)
             ind = true;
             lastIdx = i;
         }
-        overUnderVolt._1pPlatform = (Table115V[i] == Regs_UpsV)? (lastIdx == i): overUnderVolt._1pPlatform;
-        overUnderVolt.ups1 = (Table115V[i] == Regs_DirectV)? (lastIdx == i): overUnderVolt.ups1;
+        overUnderVolt.ups = (Table115V[i] == Regs_UpsV)? (lastIdx == i): overUnderVolt.ups;
+        overUnderVolt.direct = (Table115V[i] == Regs_DirectV)? (lastIdx == i): overUnderVolt.direct;
         //overUnderVolt.ups2 = (Table115V[i] == Regs_Ups2V)? (lastIdx == i): overUnderVolt.ups2;
         //overUnderVolt.ups3 = (Table115V[i] == Regs_Ups3V)? (lastIdx == i): overUnderVolt.ups3;
         //overUnderVolt.ups4 = (Table115V[i] == Regs_Ups4V)? (lastIdx == i): overUnderVolt.ups4;
@@ -1012,7 +1012,7 @@ void CheckSys(bool virtChange)
                 break;
             }
     }
-    leds.ok = (!ind) && (!overUnderVolt._3pPlatform) && (!fI2cFail);
+    leds.ok = (!ind) /*&& (!overUnderVolt._3pPlatform)*/ && (!fI2cFail);
     leds.fail = !leds.ok;
 
     ind = false;
@@ -1060,19 +1060,19 @@ void CheckSys(bool virtChange)
 
 
     //over temp
-    qapInd1.psuOverTemp = (RegsTable[Regs_TempPsuDrawer] > LIMIT_TEMP_PSU) || (RegsTable[Regs_TempPsuPcb] > LIMIT_TEMP_PSU);
-    qapInd1.esrA_OverTemp = (RegsTable[Regs_TempEsrL_U] > LIMIT_TEMP_ESR) || 
+    //qapInd1.psuOverTemp = (RegsTable[Regs_TempPsuDrawer] > LIMIT_TEMP_PSU) || (RegsTable[Regs_TempPsuPcb] > LIMIT_TEMP_PSU);
+    qapInd1.esrL_OverTemp = (RegsTable[Regs_TempEsrL_U] > LIMIT_TEMP_ESR) || 
                             //(RegsTable[Regs_TempEsrL_F] > LIMIT_TEMP_ESR) || 
                             (RegsTable[Regs_TempEsrL_D] > LIMIT_TEMP_ESR);
-    qapInd1.esrB_OverTemp = (RegsTable[Regs_TempEsrR_U] > LIMIT_TEMP_ESR) || 
+    qapInd1.esrR_OverTemp = (RegsTable[Regs_TempEsrR_U] > LIMIT_TEMP_ESR) || 
                             //(RegsTable[Regs_TempEsrR_F] > LIMIT_TEMP_ESR) || 
                             (RegsTable[Regs_TempEsrR_D] > LIMIT_TEMP_ESR);
     //qapInd1.esrC_OverTemp = (RegsTable[Regs_TempEsrC_U] > LIMIT_TEMP_ESR);// || 
                             //(Regs_TempEsrC_F > LIMIT_TEMP_ESR) || 
                             //(Regs_TempEsrC_D > LIMIT_TEMP_ESR);
-//        qapLeds.esrD_OverTemp = (Regs_TempEsrD_U > LIMIT_TEMP_ESR) || 
-//                                (Regs_TempEsrD_F > LIMIT_TEMP_ESR) || 
-//                                (Regs_TempEsrD_D > LIMIT_TEMP_ESR);
+
+
+
     /*fOverTemp = qapInd1.psuOverTemp ||
                 qapInd1.esrA_OverTemp ||
                 qapInd1.esrB_OverTemp ||
@@ -1098,55 +1098,55 @@ void CheckSys(bool virtChange)
 #endif
                      ;
 
-    qapInd2.systemOk = leds.systemOk;
-    qapInd2.acOn = onState;
+    //qapInd2.systemOk = leds.systemOk;
+    //qapInd2.acOn = onState;
     qapInd1.acInFail = leds.fail;
-    qapInd2.acIn = leds.ok;
+    //qapInd2.acIn = leds.ok;
     //qapInd2.heuOk = extStatus.heuOk;
     qapInd1.psuFail = qapPsuFail;
     ind =              (RegsTable[Regs_FanEsrR1] < LIMIT_FAN) || 
                        (RegsTable[Regs_FanEsrR2] < LIMIT_FAN) ||  
                        (RegsTable[Regs_FanEsrR3] < LIMIT_FAN) || 
                        (RegsTable[Regs_FanEsrR4] < LIMIT_FAN);
-    qapInd1.esrA_Fan = !ind; //fan OK LED
+    qapInd1.esrR_Fan = !ind; //fan OK LED
     ind =              (RegsTable[Regs_FanEsrL1] < LIMIT_FAN) || 
                        (RegsTable[Regs_FanEsrL2] < LIMIT_FAN) ||  
                        (RegsTable[Regs_FanEsrL3] < LIMIT_FAN) || 
                        (RegsTable[Regs_FanEsrL4] < LIMIT_FAN);
-    qapInd1.esrB_Fan = !ind; //fan OK LED
+    qapInd1.esrL_Fan = !ind; //fan OK LED
 //    ind =              (RegsTable[Regs_FanEsrC1] < LIMIT_FAN);// || 
 ////                           (Regs_FanEsrC2 < LIMIT_FAN) ||  
 ////                           (Regs_FanEsrC3 < LIMIT_FAN) || 
 ////                           (Regs_FanEsrC4 < LIMIT_FAN);
 //    qapInd1.esrC_Fan = !ind; //fan OK LED
 
-    qapLeds.arduOverTemp = qapInd1.arduOverTemp;
-    qapLeds.psuOverTemp = qapInd1.psuOverTemp;
-    qapLeds.dfc1OverTemp = qapInd1.dfc1OverTemp;
-    qapLeds.dfc2OverTemp = qapInd1.dfc2OverTemp;
-    qapLeds.esrA_OverTemp = qapInd1.esrA_OverTemp;
-    qapLeds.esrB_OverTemp = qapInd1.esrB_OverTemp;
-    qapLeds.esrC_OverTemp = qapInd1.esrC_OverTemp;
+    qapLeds.arduOverTemp = 0;
+    qapLeds.psuOverTemp = 0;
+    qapLeds.dfc1OverTemp = 0;
+    qapLeds.dfc2OverTemp = 0;
+    qapLeds.esrR_OverTemp = qapInd1.esrR_OverTemp;
+    qapLeds.esrL_OverTemp = qapInd1.esrL_OverTemp;
+    qapLeds.esrC_OverTemp = 0;
     qapLeds.acInFail = qapInd1.acInFail;
     qapLeds.psuFail = qapInd1.psuFail;
-    qapLeds.arduCritTemp = qapInd1.arduCritTemp;
-    qapLeds.dfc1CritTemp = qapInd1.dfc1CritTemp;
-    qapLeds.dfc2CritTemp = qapInd1.dfc2CritTemp;
-    qapLeds.esrA_Fan = qapInd1.esrA_Fan;
-    qapLeds.esrB_Fan = qapInd1.esrB_Fan;
-    qapLeds.esrC_Fan = qapInd1.esrC_Fan;
+    qapLeds.arduCritTemp = 0;
+    qapLeds.dfc1CritTemp = 0;
+    qapLeds.dfc2CritTemp = 0;
+    qapLeds.esrR_Fan = qapInd1.esrR_Fan;
+    qapLeds.esrL_Fan = qapInd1.esrL_Fan;
+    qapLeds.esrC_Fan = 0;
 
 
-    qapLeds.acIn = qapInd2.acIn;
-    qapLeds.acOn = qapInd2.acOn;
-    qapLeds.arduOk = qapInd2.arduOk;
+    qapLeds.acIn = leds.ok;
+    qapLeds.acOn = onState;
+    qapLeds.arduOk = 0;
     //extStatus.arduPowerOn = qapLeds.arduOk;
-    qapLeds.dfc1Ok = qapInd2.dfc1Ok;
+    qapLeds.dfc1Ok = 0;
     //extStatus.dfc1PowerOn = qapLeds.dfc1Ok;
-    qapLeds.dfc2Ok = qapInd2.dfc2Ok;
+    qapLeds.dfc2Ok = 0;
     //extStatus.dfc2PowerOn = qapLeds.dfc2Ok;
-    qapLeds.systemOk = qapInd2.systemOk;
-    qapLeds.heuOk = qapInd2.heuOk;
+    qapLeds.systemOk = leds.systemOk;
+    qapLeds.heuOk = 0;
 
     if (switches.lampTest)
     {
@@ -1174,7 +1174,7 @@ void CheckSys(bool virtChange)
     qapLedsLast = qapLeds.val;
     // update Qap registers
     RegsTable[Regs_QapInd1] = qapInd1.val;
-    RegsTable[Regs_QapInd2] = qapInd2.val;
+    //RegsTable[Regs_QapInd2] = qapInd2.val;
     RegsTable[Regs_ExtStatus] = extStatus.val;
     // check current limits
     for (i=0; i< sizeof(TableA); i++)
@@ -1423,15 +1423,18 @@ void CheckDependencies(bool virtChange)
     //ssr.heu = ssr.heu && (!overUnderVolt._3pPlatform);
     //ssr.cEsm = ssr.cEsm && (!overUnderVolt._1pPlatform);
     //ssr.afe = ssr.afe && (!overUnderVolt.ups3);
-    ssr.esrR = ssr.esrR && ((!overUnderVolt.ups1) || (!overUnderVolt.ups2) || (!overUnderVolt._1pPlatform) 
-            || (!overUnderVolt._3pPlatform));
-    ssr.esrL = ssr.esrL && ((!overUnderVolt.ups1) || (!overUnderVolt._1pPlatform));
-    ssr.service = ssr.service && (!overUnderVolt._1pPlatform);
+    ssr.esrR = ssr.esrR && (!(overUnderVolt.direct && overUnderVolt.ups)); //de Morgan not(A And B) = not(A) Or not(B)
+    ssr.esrL = ssr.esrL && (!(overUnderVolt.direct && overUnderVolt.ups)); //de Morgan not(A And B) = not(A) Or not(B)
+//    ssr.esrR = ssr.esrR && ((!overUnderVolt.ups1) || (!overUnderVolt.ups2) || (!overUnderVolt._1pPlatform) 
+//            || (!overUnderVolt._3pPlatform));
+//    ssr.esrL = ssr.esrL && ((!overUnderVolt.ups1) || (!overUnderVolt._1pPlatform));
+    ssr.service = ssr.service && (!overUnderVolt.direct); //TBD
     //ssr.ups2Occ = ssr.ups2Occ && (!overUnderVolt.ups2);
-    ssr.occ1 = ssr.occ1 && (!overUnderVolt.ups4);
-    ssr.occ2 = ssr.occ2 && (!overUnderVolt.ups4);
-    ssr.occ3 = ssr.occ3 && (!overUnderVolt.ups4);
-    ssr.dfRfu = ssr.dfRfu && ssr.esrR;
+    ssr.occ1 = ssr.occ1 && (!overUnderVolt.ups);
+    ssr.occ2 = ssr.occ2 && (!overUnderVolt.ups);
+    ssr.occ3 = ssr.occ3 && (!overUnderVolt.direct);
+    ssr.dfRfu = ssr.dfRfu && (!overUnderVolt.direct) && ssr.esrL;
+    ssr.abjb = ssr.abjb && (!overUnderVolt.direct) && ssr.esrL;
     
     virtualSsr.val = virtualSsr.val | (lastState.val & (~ssr.val)); //if SSR turned off turn on virtual indication
     
