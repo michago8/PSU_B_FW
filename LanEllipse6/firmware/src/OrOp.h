@@ -19,19 +19,19 @@ extern "C" {
     
 #define TABLE_A     {/*Regs_ArduL1A, Regs_Dfc12L1A, Regs_HeuA,*/\
                     Regs_EsrLPs2A/*?ESR B - 28V*/, Regs_DirectEsrL_A,/*?ESR B -1P*/Regs_DfRfuA,\
-                    Regs_AbjbA, /*Regs_Ups2EsrA_A, Regs_Ups2OccA,*/\
+                    Regs_AbjbA, Regs_EsrR_Ps3A, /* Regs_Ups2OccA,*/\
                     Regs_UpsEsrR_A, Regs_EsrR28A, /*Regs_AfeA,*/\
                     Regs_Occ1A, Regs_Occ2A, Regs_Occ3A,\
                     Regs_ServiceA, /*Regs_EsrA6KwA*//*?ESR A -1P*/}
 #define TABLE_A_LIMIT {/*LIMIT_ARDU, LIMIT_DFC, LIMIT_HEU,*/\
-                    LIMIT_ESR_B28V, LIMIT_DIRECT_ESR_L, LIMIT_DFRFU,\
-                    LIMIT_ABJB, /*LIMIT_ESRAUPS2, LIMIT_UPS2OOC,*/\
-                    LIMIT_UPS_ESR_R, LIMIT_ESRA28V, /*LIMIT_AFE,*/\
+                    LIMIT_ESR_L28V, LIMIT_ESR_L_DIRECT, LIMIT_DFRFU,\
+                    LIMIT_ABJB, LIMIT_CESM, /*LIMIT_UPS2OOC,*/\
+                    LIMIT_ESR_R_UPS, LIMIT_ESR_R28V, /*LIMIT_AFE,*/\
                     LIMIT_OCC1, LIMIT_OCC2, LIMIT_OCC3,\
                     LIMIT_SERVICE/*, LIMIT_ESRA1P*/}
 #define TABLE_A_OUT { /*E_ARDU, E_DFC, E_HEU,*/\
                     E_ESR_L, E_ESR_L, E_DFRFU,\
-                    E_ABJB, /*E_ESRA, E_UPS2OOC,*/\
+                    E_ABJB, E_ESR_R, /*E_UPS2OOC,*/\
                     E_ESR_R, E_ESR_R,/* E_AFE,*/\
                     E_OCC1, E_OCC2, E_OCC3,\
                     E_SERVICE}

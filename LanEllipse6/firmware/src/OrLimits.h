@@ -27,36 +27,33 @@ extern "C" {
 #define LIMIT_TEMP_ESR  50//Celsious 
 //#define LIMIT_TEMP_ESR_CRIT  60   
 #define LIMIT_FAN       600//RPM
-#define LIMIT_DFC1      4//Amp
-#define LIMIT_DFC2      4//Amp
-#define LIMIT_DFC3      4//Amp
-#define LIMIT_DFC4      4//Amp
-#define LIMIT_ARDU_EN   44//Amp
-#define LIMIT_SPARE     4//Amp
-#define LIMIT_HEU       32//Amp
-#define LIMIT_SERVICE   7//Amp
+//#define LIMIT_DFC1      4//Amp
+//#define LIMIT_DFC2      4//Amp
+//#define LIMIT_DFC3      4//Amp
+//#define LIMIT_DFC4      4//Amp
+//#define LIMIT_ARDU_EN   44//Amp
+//#define LIMIT_SPARE     4//Amp
+//#define LIMIT_HEU       32//Amp
+#define LIMIT_SERVICE   6//7//Amp
 #define LIMIT_ABJB      2//Amp
 //9408
-#define LIMIT_ARDU      17//13//Amp
-#define LIMIT_DFC       3//2//Amp
-#define LIMIT_ESR_B28V  74//Amp
-#define LIMIT_ESR_B1P   36//Amp
-#define LIMIT_HFMON     5//3//Amp
-#define LIMIT_CESM      5//Amp
-#define LIMIT_ESRAUPS2  13//Amp
-#define LIMIT_UPS2OOC   5//Amp
-#define LIMIT_ESRAUPS1  8//Amp
-#define LIMIT_ESRA28V   31//Amp
-#define LIMIT_AFE       18//Amp
-#define LIMIT_OCC1      6//Amp
-#define LIMIT_OCC2      6//Amp
-#define LIMIT_OCC3      6//Amp
-#define LIMIT_ESRA1P    16//Amp
+//#define LIMIT_ARDU      17//13//Amp
+//#define LIMIT_DFC       3//2//Amp
+#define LIMIT_ESR_L28V  69//74//Amp
+#define LIMIT_ESR_L_DIRECT   24//36//Amp
+#define LIMIT_DFRFU     7//5//3//Amp
+#define LIMIT_CESM      16//5//Amp
+#define LIMIT_ESR_R_UPS  36//13//Amp
+//#define LIMIT_UPS2OOC   5//Amp
+#define LIMIT_ESR_L_UPS  20//8//Amp
+#define LIMIT_ESR_R28V   6//31//Amp
+//#define LIMIT_AFE       18//Amp
+#define LIMIT_OCC1      5//6//Amp
+#define LIMIT_OCC2      5//6//Amp
+#define LIMIT_OCC3      5//6//Amp
+//#define LIMIT_ESRA1P    16//Amp
     
-//TBD
-#define LIMIT_DIRECT_ESR_L  0
-#define LIMIT_DFRFU         0
-#define LIMIT_UPS_ESR_R     0   
+
     
 
 
