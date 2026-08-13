@@ -77,7 +77,7 @@ static uint8_t Read(uint16_t memAdd, uint8_t *rdata, uint8_t len)
 uint8_t Or24Read(void)
 {
     // check if error in reading or PSU configuration not valid
-    if (Read(0, data, DATA_24_SIZE) || ((data[0] != 1) && (data[0] != 2)))
+    if (Read(0, data, DATA_24_SIZE) || (data[0] != 3))
     {
         SYS_CONSOLE_PRINT("read data[0,1]:%u,%u\r\n", data[0], data[1]);
         return 1;

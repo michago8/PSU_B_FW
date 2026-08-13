@@ -46,7 +46,7 @@ static void ReadProc(void);
 static void FanProc(void);
 static void ReadTem(void);
 static void WriteTem(void);
-static void WriteTem_En(void);
+//static void WriteTem_En(void);
 static void SysConf(void);
 static void CheckSys(bool virtChange);
 static void ResetSystem(void);
@@ -80,10 +80,10 @@ static I2cStruct i2cArray[9] = {{.val = 0}, {.val = 0}, {.val = 0}, {.val = 0},
                                 {.val = 0}, {.val = 0}, {.val = 0}, {.val = 0}, 
                                 {.val = 0},};
 static Ssr ssr = {.val = 0}, virtualSsr = {.val = 0};
-static Ssr_En ssrEn = {.val = 0};
+//static Ssr_En ssrEn = {.val = 0};
 static Switches switches = {.val = 0};
-static Switches_En switchesEn = {.val = 0};
-static SysErrors_En sysErrorsEn = {.val = 0}; 
+//static Switches_En switchesEn = {.val = 0};
+//static SysErrors_En sysErrorsEn = {.val = 0}; 
 //static PhaseStatus phaseStatus = {.val = 0};
 //static PhaseStatus_En phaseStatusEn = {.val = 0};
 static ExtStatus extStatus = {.val = 0};
@@ -93,14 +93,14 @@ static QapLeds qapLeds = {.val = 0};
 static OverUnderVolt overUnderVolt = {.val = 0};
 static void CommRstProc(void);
 MainAndCb mainAndCb = {.val = 0};
-MainAndCb_En mainAndCbEn = {.val = 0};
+//MainAndCb_En mainAndCbEn = {.val = 0};
 Leds leds = {.val = 0};
-static Leds_En ledsEn = {.val = 0};
+//static Leds_En ledsEn = {.val = 0};
 ConvPort convPortTable[] = CONV_PORT_TABLE;
 
 static bool fUpdateSsr = false, fUpdateLeds = false, fUpdateLampTest = false, fUpdateQap = false,
         f100ms = false, f1s = false, f10s = false, f1min = true, fForceMux = false, fForceFan = false, onState = false;
-static bool f9800 = false, f9408 = false, leakage = false, leakageCritic = false, leakage2 = false, /*leakageCritic2 = false,*/ fPowerDown = false, fI2cFail = false;
+static bool f9408 = true, leakage = false, leakageCritic = false, leakage2 = false, /*leakageCritic2 = false,*/ fPowerDown = false, fI2cFail = false;
 static bool isRst = false, fBattleShort = false;
 static uint8_t commRstState = 0, commRstDly = 0;
 static uint16_t resetDly = 0, cap = 0, delta = 0, fFreqLife = 100, freq = 125, readDly = 0, fanDly = 0, onOffDly = 0, 
@@ -191,12 +191,8 @@ bool OrOpIs9408(void)
 }
 
 void SysConf(void)
-{
-    if (RegsTable[Regs_EepromPsuConf] == 1)
-        f9408 = true;
-    else if (RegsTable[Regs_EepromPsuConf] == 2)
-        f9800 = true;
-    
+{   
+    f9408 = true;
 }
 // should be called in 1 second timing
 void ShutDownProc(void)
@@ -390,31 +386,16 @@ void IsoTestProc(void)
 void LampTestHandle(void)
 {
     static bool lampState = false;
-    if (f9408)
+    
+    if (switches.lampTest != lampState)
     {
-        if (switches.lampTest != lampState)
-        {
-            lampState = switches.lampTest;
-            ssr.lampTest = (lampState)? 1: 0;
-            RegsTable[Regs_CtrlSsr] = ssr.val;
-            //UpdateSsr_En(ssrEn.val);
-            //i2cArray[I2C1_76].P16 = switches.lampTest;
-            i2cArray[I2C2_75].P14 = switches.lampTest;
-            fUpdateLampTest = true;
-        }
-    }
-    else if (f9800)
-    {
-        if (switchesEn.lampTest != lampState)
-        {
-            lampState = switchesEn.lampTest;
-            ssrEn.lampTest = (lampState)? 1: 0;
-            RegsTable[Regs_CtrlSsr_En] = ssrEn.val;
-            //UpdateSsr_En(ssrEn.val);
-            //i2cArray[I2C1_76].P16 = switchesEn.lampTest;
-            i2cArray[I2C2_75].P14 = switchesEn.lampTest;
-            fUpdateLampTest = true;
-        }
+        lampState = switches.lampTest;
+        ssr.lampTest = (lampState)? 1: 0;
+        RegsTable[Regs_CtrlSsr] = ssr.val;
+        //UpdateSsr_En(ssrEn.val);
+        //i2cArray[I2C1_76].P16 = switches.lampTest;
+        i2cArray[I2C2_75].P14 = switches.lampTest;
+        fUpdateLampTest = true;
     }
 }
 
@@ -501,7 +482,7 @@ void UpdateLeds(void)
     {
         fUpdateLeds = false;
         RegsTable[Regs_Leds] = leds.val;
-        RegsTable[Regs_Leds_En] = ledsEn.val;
+        //RegsTable[Regs_Leds_En] = ledsEn.val;
         
         
         i2cArray[I2C2_75].P0 = leds.fail;
@@ -727,16 +708,6 @@ void ReadSw(void)
         //switches.lampTest = i2cArray[I2C1_77].P13;
         RegsTable[Regs_Switches] = (switches.val & 0x7FFF);  
         
-        switchesEn.ardu     = !i2cArray[I2C2_77].P0;
-        switchesEn.dfc2     = !i2cArray[I2C2_77].P1;
-        switchesEn.heu      = !i2cArray[I2C2_77].P2;
-        switchesEn.dfc4     = !i2cArray[I2C2_77].P3;
-        switchesEn.service  = !i2cArray[I2C2_77].P7;
-        switchesEn.dfc1     = !i2cArray[I2C2_77].P11;
-        switchesEn.spare    = !i2cArray[I2C2_77].P12;
-        switchesEn.dfc3     = !i2cArray[I2C2_77].P13;
-        switchesEn.abjb     = !i2cArray[I2C2_77].P15;
-        RegsTable[Regs_Switches_En] = (switchesEn.val & 0x3FF);
     }
 }
 // Operation Periodic (1mS)
@@ -811,9 +782,9 @@ void OrOpCmds(uint16_t address)
         case Regs_TemH:
                 WriteTem();
             break;
-        case Regs_TemH_En:
-                WriteTem_En();
-            break;
+//        case Regs_TemH_En:
+//                WriteTem_En();
+//            break;
         case Regs_OverTempT1:
             RegsTable[address] = (RegsTable[address] < 1) ? 1 : RegsTable[address];
             RegsTable[address] = (RegsTable[address] > 10) ? 10: RegsTable[address];
@@ -860,13 +831,13 @@ void OrOpCmds(uint16_t address)
 //                IsoTest2Init();
 //            }
             
-        case Regs_IsoBits_En:
-            if (RegsTable[address] == 1) //Test
-            {
-                RegsTable[address] = 0;
-                IsoTest2Init();
-            }
-            break;
+//        case Regs_IsoBits_En:
+//            if (RegsTable[address] == 1) //Test
+//            {
+//                RegsTable[address] = 0;
+//                IsoTest2Init();
+//            }
+//            break;
         case Regs_MaintForce:
             fForceMux = RegsTable[address] & 0x1;
             fForceFan = RegsTable[address] & 0x2;
@@ -1335,7 +1306,7 @@ uint16 Calc(uint16_t an, uint8_t param)
             }
             break;
         case a_0p08b_X5c_3:
-            if ((f9408 && (onState || powerDownCtr)) || (f9800 && RegsTable[Regs_CtrlSsr_En] != 0))
+            if (onState || powerDownCtr)
                 if (an > calibX.x[4])
                     val = (uint32_t)((an-calibX.x[4])*1748 + 32768) >> 16; // (an - x5) x 0.08/3 with rounding.
                 else
@@ -1371,7 +1342,7 @@ uint16 Calc(uint16_t an, uint8_t param)
             }
             break;
         case a_0p08b_X3:
-            if ((f9408 && (onState || powerDownCtr)) || (f9800 && RegsTable[Regs_CtrlSsr_En] != 0))
+            if (onState || powerDownCtr)
                 if (an > calibX.x[2])
                     val = (uint32_t)((an-calibX.x[2])*5243 + 32768) >> 16; // (an - 1698) x 0.08 with rounding.
                 else
@@ -1451,8 +1422,8 @@ void CheckDependencies(bool virtChange)
 void ReadTem(void)
 {
     uint32_t val = OrDsRead()/14400; // read in 0.25second to hours.
-    RegsTable[Regs_Tem] = RegsTable[Regs_Tem_En] = val & 0xFFFF;
-    RegsTable[Regs_TemH] = RegsTable[Regs_TemH_En] = val >> 16;
+    RegsTable[Regs_Tem] = val & 0xFFFF;
+    RegsTable[Regs_TemH] = val >> 16;
 }
 
 void WriteTem(void)
@@ -1462,12 +1433,12 @@ void WriteTem(void)
     OrDsWrite(val * 14400);
 }
 
-void WriteTem_En(void)
-{
-    uint32_t val = RegsTable[Regs_Tem_En] + RegsTable[Regs_TemH_En]*65536;
-    SYS_CONSOLE_PRINT("value: %d, value big: %ld\r\n", val, val*14400);
-    OrDsWrite(val * 14400);
-}
+//void WriteTem_En(void)
+//{
+//    uint32_t val = RegsTable[Regs_Tem_En] + RegsTable[Regs_TemH_En]*65536;
+//    SYS_CONSOLE_PRINT("value: %d, value big: %ld\r\n", val, val*14400);
+//    OrDsWrite(val * 14400);
+//}
 
 
 void FanProc(void)
@@ -1480,52 +1451,27 @@ void FanProc(void)
         i = 0;
         return;
     }
-    if (f9408){
-        switch(fanState){
-            case 0:
-                fanState++;
-                i = 0;
-                fanDly = 200;
-                break;
-            case 1:
-                if (fanDly) break;
-                if (!OrEmcReadRpm( FanOrder[i], &val)){
-                    RegsTable[FanReg[i]] = val;
-                    //sysErrorsEn.FanError = (val < LIMIT_FAN);
-                    //RegsTable[Regs_SysErrors_En] = sysErrorsEn.val;
-                }
-                fanDly = 200;
-                i++;
-                if (i >= sizeof(FanOrder)) fanState = 0;
-                break;
-            
-            default:
-                break;
-        }
-    }
-    else if (f9800){
-        i = 17;
-        switch(fanState)
-        {
-            case 0:
-                fanState++;
-                break;
-            case 1:
-                if (!OrEmcReadRpm( i, &val)){
-                    RegsTable[Regs_FanPsu_En] = val;
-                    sysErrorsEn.FanError = (val < LIMIT_FAN);
-                    RegsTable[Regs_SysErrors_En] = sysErrorsEn.val;
-                }
-                fanDly = 1000;
-                fanState++;
-                break;
-            case 2:
-                if (fanDly) break;
-                fanState = 1;
-                break;
-            default:
-                break;
-        }
+    
+    switch(fanState){
+        case 0:
+            fanState++;
+            i = 0;
+            fanDly = 200;
+            break;
+        case 1:
+            if (fanDly) break;
+            if (!OrEmcReadRpm( FanOrder[i], &val)){
+                RegsTable[FanReg[i]] = val;
+                //sysErrorsEn.FanError = (val < LIMIT_FAN);
+                //RegsTable[Regs_SysErrors_En] = sysErrorsEn.val;
+            }
+            fanDly = 200;
+            i++;
+            if (i >= sizeof(FanOrder)) fanState = 0;
+            break;
+
+        default:
+            break;
     }
 }
 void ReadCalc(uint8_t reg, uint8_t an, uint8_t calc)
