@@ -632,7 +632,7 @@ void OnOffProc(void)
         case 1:
             if (onOffDly) break;
             ssrSdDly = SSR_SD_DLY;
-            ssr.esrL = (switches.esrL)? 1: 0;
+            ssr.esrR = (switches.esrR)? 1: 0;
             RegsTable[Regs_CtrlSsr] = ssr.val;
             UpdateSsr(ssr.val);
             onOffDly = GetSeqDly();
@@ -640,10 +640,7 @@ void OnOffProc(void)
             break;
         case 2:
             if (onOffDly) break;
-            ssr.esrR = (switches.esrR)? 1: 0;
-            ssr.dfRfu = (switches.dfRfu)? 1: 0;
-            ssr.abjb = (switches.abjb)? 1: 0;
-            ssr.service = (switches.service)? 1: 0;
+            ssr.esrL = (switches.esrL)? 1: 0;
             RegsTable[Regs_CtrlSsr] = ssr.val;
             UpdateSsr(ssr.val);
             onOffDly = GetSeqDly();
@@ -687,6 +684,9 @@ void OnOffProc(void)
             ssr.occ1 = (switches.occ1)? 1: 0;
             ssr.occ2 = (switches.occ2)? 1: 0;
             ssr.occ3 = (switches.occ3)? 1: 0;
+            ssr.dfRfu = (switches.dfRfu)? 1: 0;
+            ssr.abjb = (switches.abjb)? 1: 0;
+            ssr.service = (switches.service)? 1: 0;
             RegsTable[Regs_CtrlSsr] = ssr.val;
             UpdateSsr(ssr.val);
             onOffState = 0;
