@@ -144,7 +144,7 @@ bool ReadHoldingReg(uint16_t address, uint16_t *value)
 bool WriteHoldingReg(uint16_t address, uint16_t value)
 {
     if ((address == 0)||
-         ((address == 0x31) || (address == 0x33)) ||
+         (address == 0x31) || /*(address == 0x33)) ||*/
             (address == 0x54) || (address == 0x55) || 
             (address == 0x5A) || (address == 0x5B) || 
             (address == 0x5C) || 
@@ -153,7 +153,7 @@ bool WriteHoldingReg(uint16_t address, uint16_t value)
             (address == 0x6C) || (address == 0x6D) || (address == 0x6E) ||
             ((address >= 0x70) && (address <= 0x7F )) ||
             (address == 0x80) || (address == 0x9F) ||
-            (address == 0xA3) || (address == 0xA4) || 
+            /*(address == 0xA3) || (address == 0xA4) ||*/ 
             (address == 0xB0) || (address == 0xB1) ||
             (address == 0xB9) || (address == 0xBA))
     {
