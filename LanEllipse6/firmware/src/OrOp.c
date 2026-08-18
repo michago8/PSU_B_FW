@@ -532,7 +532,7 @@ void ReadIntI04(void)
         {
             //mainAndCb.ups3          = !i2cArray[I2C1_77].P5;
             //mainAndCb._3pPlatform   = !i2cArray[I2C1_77].P6;
-            //mainAndCb.ups1          = !i2cArray[I2C1_77].P7;
+            mainAndCb.direct          = !i2cArray[I2C1_77].P7;
             //mainAndCb.ups2          = !i2cArray[I2C1_77].P10;
             mainAndCb.ups      = !i2cArray[I2C1_77].P11;
             //mainAndCb.ups4          = !i2cArray[I2C1_77].P12;
