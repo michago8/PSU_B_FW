@@ -116,7 +116,7 @@ void InitRst(void)
     {
         RegsTable[Regs_RstInd] = 0;
         isRst = true;
-        RegsTable[Regs_CtrlSsr] =  RegsTable[Regs_RstState];
+        RegsTable[Regs_CtrlSsr] =  RegsTable[Regs_RstState] & REG_CTRL_SSR_MASK;
         UpdateSsr(RegsTable[Regs_CtrlSsr]);
         Or24Write();
     }
@@ -138,7 +138,7 @@ void CommRstProc(void)
             break;
         case 1:
             RegsTable[Regs_RstInd] = 0x55;
-            RegsTable[Regs_RstState] = RegsTable[Regs_CtrlSsr];
+            RegsTable[Regs_RstState] = RegsTable[Regs_CtrlSsr] & REG_CTRL_SSR_MASK;
             Or24Write();
             commRstDly = 10;
             commRstState++;
@@ -295,7 +295,7 @@ void UpdateTempTimers(void)
         
     }
     if (fUpdateSsr){
-        RegsTable[Regs_CtrlSsr] = ssr.val;
+        RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
         UpdateSsr(ssr.val);
     }
 }
@@ -391,7 +391,7 @@ void LampTestHandle(void)
     {
         lampState = switches.lampTest;
         ssr.lampTest = (lampState)? 1: 0;
-        RegsTable[Regs_CtrlSsr] = ssr.val;
+        RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
         //UpdateSsr_En(ssrEn.val);
         //i2cArray[I2C1_76].P16 = switches.lampTest;
         i2cArray[I2C2_75].P14 = switches.lampTest;
@@ -481,7 +481,7 @@ void UpdateLeds(void)
     if (fStart || fUpdateLeds)
     {
         fUpdateLeds = false;
-        RegsTable[Regs_Leds] = leds.val;
+        RegsTable[Regs_Leds] = leds.val & REG_LEDS_MASK;
         //RegsTable[Regs_Leds_En] = ledsEn.val;
         
         
@@ -539,14 +539,14 @@ void ReadIntI04(void)
             switches.lampTest       = !i2cArray[I2C1_77].P13;
             mainAndCb.main          = i2cArray[I2C1_77].P14; 
             //RegsTable[Regs_3pPhase] = i2cArray[I2C1_77].P15;
-            RegsTable[Regs_MainAndCB] = (mainAndCb.val & 0x7F);
+            RegsTable[Regs_MainAndCB] = (mainAndCb.val & REG_MAIN_AND_CB_MASK);
 
             extStatus.pcmMainOnOff  = !i2cArray[I2C1_77].P0;
             extStatus.pqapErase     = !i2cArray[I2C1_77].P1;
             extStatus.pqapBattle    = i2cArray[I2C1_77].P2;
             extStatus.pqapMainOnOff = !i2cArray[I2C1_77].P3;
             //extStatus.sqapErase     = !i2cArray[I2C1_77].P4;
-            RegsTable[Regs_ExtStatus] = extStatus.val;
+            RegsTable[Regs_ExtStatus] = extStatus.val & REG_EXT_STATUS_MASK;
             SYS_CONSOLE_PRINT("I2C1_77, ExtStatus, pqapErase:: 0x%X, 0x%X, %u\r\n", i2cArray[I2C1_77].val, RegsTable[Regs_ExtStatus], extStatus.pqapErase);
             fBattleShort = RegsTable[Regs_BattleShort] || extStatus.pqapBattle;      
         }
@@ -633,7 +633,7 @@ void OnOffProc(void)
             if (onOffDly) break;
             ssrSdDly = SSR_SD_DLY;
             ssr.esrR = (switches.esrR)? 1: 0;
-            RegsTable[Regs_CtrlSsr] = ssr.val;
+            RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
             UpdateSsr(ssr.val);
             onOffDly = GetSeqDly();
             onOffState = 2;
@@ -641,7 +641,7 @@ void OnOffProc(void)
         case 2:
             if (onOffDly) break;
             ssr.esrL = (switches.esrL)? 1: 0;
-            RegsTable[Regs_CtrlSsr] = ssr.val;
+            RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
             UpdateSsr(ssr.val);
             onOffDly = GetSeqDly();
             onOffState = 7;
@@ -687,7 +687,7 @@ void OnOffProc(void)
             ssr.dfRfu = (switches.dfRfu)? 1: 0;
             ssr.abjb = (switches.abjb)? 1: 0;
             ssr.service = (switches.service)? 1: 0;
-            RegsTable[Regs_CtrlSsr] = ssr.val;
+            RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
             UpdateSsr(ssr.val);
             onOffState = 0;
             break;
@@ -706,7 +706,7 @@ void ReadSw(void)
         switches.val &= ~0x7FFF;
         switches.val |= ((~i2cArray[I2C2_77].val) & 0x7FFF);
         //switches.lampTest = i2cArray[I2C1_77].P13;
-        RegsTable[Regs_Switches] = (switches.val & 0x7FFF);  
+        RegsTable[Regs_Switches] = (switches.val & REG_SWITCHES_MASK);  
         
     }
 }
@@ -974,7 +974,7 @@ void CheckSys(bool virtChange)
         //overUnderVolt.ups4 = (Table115V[i] == Regs_Ups4V)? (lastIdx == i): overUnderVolt.ups4;
     }
     //_1pOverUnderFail = ind;
-    RegsTable[Regs_OverUnderV] = overUnderVolt.val;
+    RegsTable[Regs_OverUnderV] = overUnderVolt.val & REG_OVER_UNDER_V_MASK;
     if (!ind){
         for (i=0; i< sizeof(Table60Hz); i++)
             if ((RegsTable[Table60Hz[i]] < LIMIT_60HZ_L)||(RegsTable[Table60Hz[i]] > LIMIT_60HZ_H))
@@ -1144,15 +1144,15 @@ void CheckSys(bool virtChange)
 
     qapLedsLast = qapLeds.val;
     // update Qap registers
-    RegsTable[Regs_QapInd1] = qapInd1.val;
+    RegsTable[Regs_QapInd1] = qapInd1.val & REG_QAP_IND_MASK;
     //RegsTable[Regs_QapInd2] = qapInd2.val;
-    RegsTable[Regs_ExtStatus] = extStatus.val;
+    RegsTable[Regs_ExtStatus] = extStatus.val & REG_EXT_STATUS_MASK;
     // check current limits
     for (i=0; i< sizeof(TableA); i++)
         if (RegsTable[TableA[i]] > TableALimit[i])
         {
             //if value pass limit shutdown the channel.
-            RegsTable[Regs_CtrlSsr] &= ~TableAOut[i];
+            RegsTable[Regs_CtrlSsr] &= (~TableAOut[i]) & REG_CTRL_SSR_MASK;
             UpdateSsr(RegsTable[Regs_CtrlSsr]);
             fUpdateSsr = true;
         }
@@ -1412,7 +1412,7 @@ void CheckDependencies(bool virtChange)
     if (lastState.val != ssr.val)
     {
         virtualSsr.val = (~ssr.val) & (virtualSsr.val); // virtual ssr stays on, only when ssr is off and virtual ssr is on
-        RegsTable[Regs_CtrlSsr] = ssr.val;
+        RegsTable[Regs_CtrlSsr] = ssr.val & REG_CTRL_SSR_MASK;
         UpdateSsr(RegsTable[Regs_CtrlSsr]);
         fUpdateSsr = true;
     }

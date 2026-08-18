@@ -13,7 +13,14 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdbool.h>
-
+#define BIT(x) (1UL << (x))
+#define REG_CTRL_SSR_MASK   ((uint32_t)~(BIT(0) | BIT(1) | BIT(2) | BIT(4) | BIT(8) | BIT(14) | BIT(15) | 0xFFFF0000))
+#define REG_SWITCHES_MASK   ((uint32_t)~(BIT(0) | BIT(1) | BIT(2) | BIT(4) | BIT(8) | BIT(13) | 0xFFFF0000))
+#define REG_LEDS_MASK       ((uint32_t)~(BIT(5) | BIT(7) | BIT(12) | BIT(14) | BIT(15) | 0xFFFF0000))
+#define REG_MAIN_AND_CB_MASK       ((uint32_t)~(BIT(1) | BIT(4) | BIT(5) | BIT(6) | BIT(7) | 0xFFFFFF00))
+#define REG_EXT_STATUS_MASK ((uint32_t)~(BIT(8) | BIT(12) | BIT(15) | 0xFFFF00FF))  
+#define REG_QAP_IND_MASK    ((uint32_t)~(BIT(4) | BIT(5) | BIT(10) | BIT(11) | BIT(14) | BIT(15) | 0xFFFF000F))
+#define REG_OVER_UNDER_V_MASK       ((uint32_t)~(BIT(0) | BIT(3) | 0xFFFFFFF0))
 #define SIZE_OF_TABLE 256 
     
     enum{
