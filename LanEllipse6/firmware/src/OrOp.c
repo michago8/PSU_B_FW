@@ -1000,7 +1000,7 @@ void CheckSys(bool virtChange)
         }
     }
     qapPsuFail  = ind;
-    leds.psCbFail = ind || ((RegsTable[Regs_MainAndCB] & 0x7E) != 0x7E);
+    leds.psCbFail = ind || ((RegsTable[Regs_MainAndCB] & (REG_MAIN_AND_CB_MASK - 1) != (REG_MAIN_AND_CB_MASK - 1))); // REG_MAIN_AND_CB_MASK -1 not including the main on/off, bit 0
     leds.hvpFail = 0;
     //leds.sensorStackTemp = ((RegsTable[Regs_ExtStatus] & 0x2A) > 0);
     ind = false;
