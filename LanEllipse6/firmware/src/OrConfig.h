@@ -54,6 +54,7 @@
  * 1.0.0 - 1st release
  * 1.0.1 - fix direct indication
  * 1.0.2 - fix the LED psCbFail operation
+ * 1.0.3 - more fixes by Chen mails.
  */
 
 #ifndef ORCONFIG_H
@@ -64,7 +65,7 @@ extern "C" {
 #endif
 #define VERSION_H 1
 #define VERSION_M 0
-#define VERSION_L 2
+#define VERSION_L 3
 #define KEEP_ALIVE_TIME 120//seconds
 #define OR_BUFFER_SIZE 128
 

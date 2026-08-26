@@ -989,9 +989,9 @@ void CheckSys(bool virtChange)
     ind = false;
     if (!ind){
         //Table28EnCheck[0] = ssr.heu && switches.heu;
-        Table28EnCheck[1] = ssr.esrR && switches.esrR;
-        Table28EnCheck[2] = ssr.esrL && switches.esrL;
-        Table28EnCheck[3] = ssr.abjb && switches.abjb;
+        Table28EnCheck[0] = ssr.esrR && switches.esrR;
+        Table28EnCheck[1] = ssr.esrL && switches.esrL;
+        Table28EnCheck[2] = ssr.abjb && switches.abjb;
         for (i=0; i< sizeof(Table28V); i++)
         if (Table28EnCheck[i] && ((RegsTable[Table28V[i]] < LIMIT_28V_L)||(RegsTable[Table28V[i]] > LIMIT_28V_H)))
         {
@@ -1024,8 +1024,8 @@ void CheckSys(bool virtChange)
 
     leds.esrL = ssr.esrL && switches.esrL;
     leds.esrR = ssr.esrR && switches.esrR;
-    leds.dfRfu = leds.esrR && ssr.dfRfu && switches.dfRfu;
-    leds.abjb = leds.esrL && switches.abjb;
+    leds.dfRfu = leds.esrL && ssr.dfRfu && switches.dfRfu;
+    leds.abjb = leds.esrL && switches.abjb && switches.abjb;
     leds.mainOnOff = onState;
     leds.spare = 0;
 
