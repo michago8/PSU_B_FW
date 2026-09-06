@@ -311,11 +311,11 @@ extern "C" {
         struct{
             uint16_t acIn:1;
             uint16_t acOn:1;
-            uint16_t arduOk:1;
-            uint16_t heuOk:1;
-            uint16_t systemOk:1;
-            uint16_t dfc1Ok:1;
-            uint16_t dfc2Ok:1;
+            uint16_t arduOk_NA:1;
+            uint16_t heuOk_NA:1;
+            uint16_t systemOk_NA:1;
+            uint16_t dfc1Ok_NA:1;
+            uint16_t dfc2Ok_NA:1;
             uint16_t spare:9;
         };
         uint16_t val;

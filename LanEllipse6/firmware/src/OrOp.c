@@ -88,7 +88,7 @@ static Switches switches = {.val = 0};
 //static PhaseStatus_En phaseStatusEn = {.val = 0};
 static ExtStatus extStatus = {.val = 0};
 static QapInd1 qapInd1 = {.val = 0};
-//static QapInd2 qapInd2 = {.val = 0};
+static QapInd2 qapInd2 = {.val = 0};
 static QapLeds qapLeds = {.val = 0};
 static OverUnderVolt overUnderVolt = {.val = 0};
 static void CommRstProc(void);
@@ -1025,7 +1025,7 @@ void CheckSys(bool virtChange)
     leds.esrL = ssr.esrL && switches.esrL;
     leds.esrR = ssr.esrR && switches.esrR;
     leds.dfRfu = leds.esrL && ssr.dfRfu && switches.dfRfu;
-    leds.abjb = leds.esrL && switches.abjb && switches.abjb;
+    leds.abjb = leds.esrL && ssr.abjb && switches.abjb;
     leds.mainOnOff = onState;
     leds.spare = 0;
 
@@ -1070,9 +1070,9 @@ void CheckSys(bool virtChange)
                      ;
 
     //qapInd2.systemOk = leds.systemOk;
-    //qapInd2.acOn = onState;
+    qapInd2.acOn = onState;
     qapInd1.acInFail = leds.fail;
-    //qapInd2.acIn = leds.ok;
+    qapInd2.acIn = leds.ok;
     //qapInd2.heuOk = extStatus.heuOk;
     qapInd1.psuFail = qapPsuFail;
     ind =              (RegsTable[Regs_FanEsrR1] < LIMIT_FAN) || 
@@ -1145,7 +1145,7 @@ void CheckSys(bool virtChange)
     qapLedsLast = qapLeds.val;
     // update Qap registers
     RegsTable[Regs_QapInd1] = qapInd1.val & REG_QAP_IND_MASK;
-    //RegsTable[Regs_QapInd2] = qapInd2.val;
+    RegsTable[Regs_QapInd2] = qapInd2.val & REG_QAP_IND2_MASK;
     RegsTable[Regs_ExtStatus] = extStatus.val & REG_EXT_STATUS_MASK;
     // check current limits
     for (i=0; i< sizeof(TableA); i++)
