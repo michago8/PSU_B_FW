@@ -55,7 +55,7 @@
  * 1.0.1 - fix direct indication
  * 1.0.2 - fix the LED psCbFail operation
  * 1.0.3 - more fixes by Chen mails.
- * 1.0.4 - more fixes by Chen mails.
+ * 1.0.4 - more fixes by Chen mails, work on Fans.
  */
 
 #ifndef ORCONFIG_H

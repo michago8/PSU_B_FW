@@ -838,6 +838,16 @@ void OrOpCmds(uint16_t address)
 //                IsoTest2Init();
 //            }
 //            break;
+        case Regs_FanEsrR1Speed:
+        case Regs_FanEsrR2Speed:
+        case Regs_FanEsrR3Speed:
+        case Regs_FanEsrR4Speed:
+        case Regs_FanEsrL1Speed:
+        case Regs_FanEsrL2Speed:
+        case Regs_FanEsrL3Speed:
+        case Regs_FanEsrL4Speed:
+            OrEmcSetForcedPwm(address - Regs_FanEsrR1Speed + 1, RegsTable[address]);
+            break;
         case Regs_MaintForce:
             fForceMux = RegsTable[address] & 0x1;
             fForceFan = RegsTable[address] & 0x2;
