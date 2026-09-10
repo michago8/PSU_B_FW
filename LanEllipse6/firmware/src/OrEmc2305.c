@@ -203,17 +203,17 @@ uint8_t OrEmcInit(bool f9408)
 
         if (Write(0x2C, EmcFan1Config, 0x0B)) {fStartErr = true; return 1;}         //U26, Range - 0b00
         /******************************************************************************************/
-        if (Write(0x2E, EmcFan1Setting, 0x0)) {fStartErr = true; return 1;}         //U26, 100%
-        if (Write(0x2E, EmcFan2Setting, 0x0)) {fStartErr = true; return 1;}         //U26, 100%
-        if (Write(0x2E, EmcFan3Setting, 0x0)) {fStartErr = true; return 1;}         //U26, 100%
-        if (Write(0x2E, EmcFan4Setting, 0x0)) {fStartErr = true; return 1;}         //U26, 100%
+        if (Write(0x2E, EmcFan1Setting, 0x7F)) {fStartErr = true; return 1;}   //U26, 50%//100%
+        if (Write(0x2E, EmcFan2Setting, 0x7F)) {fStartErr = true; return 1;}   //U26, 50%//100%
+        if (Write(0x2E, EmcFan3Setting, 0x7F)) {fStartErr = true; return 1;}         //U26, 50%//0 = 100%100%
+        if (Write(0x2E, EmcFan4Setting, 0x7F)) {fStartErr = true; return 1;}         //U26, 50%//0 = 100%100%
         
-        if (Write(0x2F, EmcFan1Setting, 0x0)) {fStartErr = true; return 1;}         //U30, 100%
-        if (Write(0x2F, EmcFan2Setting, 0x0)) {fStartErr = true; return 1;}         //U30, 100%
-        if (Write(0x2F, EmcFan3Setting, 0x0)) {fStartErr = true; return 1;}         //U30, 100%
-        if (Write(0x2F, EmcFan4Setting, 0x0)) {fStartErr = true; return 1;}         //U30, 100%
+        if (Write(0x2F, EmcFan1Setting, 0x7F)) {fStartErr = true; return 1;}         //U30, 50%//0 = 100%
+        if (Write(0x2F, EmcFan2Setting, 0x7F)) {fStartErr = true; return 1;}         //U30, 50%//0 = 100%
+        if (Write(0x2F, EmcFan3Setting, 0x7F)) {fStartErr = true; return 1;}         //U30, 50%//0 = 100%
+        if (Write(0x2F, EmcFan4Setting, 0x7F)) {fStartErr = true; return 1;}         //U30, 50%//0 = 100%
 
-        if (Write(0x2C, EmcFan1Setting, 0x0)) {fStartErr = true; return 1;}         //U34, 100%
+        if (Write(0x2C, EmcFan1Setting, 0x7F)) {fStartErr = true; return 1;}         //U34, 50%//0xFF = 100%
         //if (Write(0x2C, EmcFan2Setting, 0xFF)) {fStartErr = true; return 1;}         //U34, 100%
         //if (Write(0x2C, EmcFan3Setting, 0xFF)) {fStartErr = true; return 1;}         //U34, 100%
         //if (Write(0x2C, EmcFan4Setting, 0xFF)) {fStartErr = true; return 1;}         //U34, 100%
@@ -224,7 +224,7 @@ uint8_t OrEmcInit(bool f9408)
         //if (Write(0x2D, EmcFan4Setting, 0xFF)) {fStartErr = true; return 1;}         //U38, 100%
     }
     if (Write(0x2D, EmcFan5Config, 0x0B)) {fStartErr = true; return 1;}         //U26, Range - 0b00
-    if (Write(0x2D, EmcFan5Setting, 0xFF)) {fStartErr = true; return 1;}         //U38, 100%
+    if (Write(0x2D, EmcFan5Setting, 0x7F)) {fStartErr = true; return 1;}         //U38, 50%//100%
     fStartErr = false;
     return 0;
 }
