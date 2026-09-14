@@ -223,8 +223,8 @@ uint8_t OrEmcInit(bool f9408)
         //if (Write(0x2D, EmcFan3Setting, 0xFF)) {fStartErr = true; return 1;}         //U38, 100%
         //if (Write(0x2D, EmcFan4Setting, 0xFF)) {fStartErr = true; return 1;}         //U38, 100%
     }
-    if (Write(0x2D, EmcFan5Config, 0x0B)) {fStartErr = true; return 1;}         //U26, Range - 0b00
-    if (Write(0x2D, EmcFan5Setting, 0x7F)) {fStartErr = true; return 1;}         //U38, 50%//100%
+    if (Write(0x2D, EmcFan5Config, 0x0B)) {fStartErr = true; return 1;}         //U38, Range - 0b00
+    if (Write(0x2D, EmcFan5Setting, 0xFF)) {fStartErr = true; return 1;}         //U38, 100%// 0xFF = 100%
     fStartErr = false;
     return 0;
 }
