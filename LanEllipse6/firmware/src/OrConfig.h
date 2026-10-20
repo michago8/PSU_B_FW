@@ -58,6 +58,7 @@
  * 1.0.4 - more fixes by Chen mails, work on Fans.
  * 1.0.5 - Fans Start at 50% instead of 100%
  * 1.0.6 - change default of PSU FAN (channel 17), back to 100%.
+ * 1.0.7 - PS3 dependency to ESR R instead of ABJB
  */
 
 #ifndef ORCONFIG_H
@@ -68,7 +69,7 @@ extern "C" {
 #endif
 #define VERSION_H 1
 #define VERSION_M 0
-#define VERSION_L 6
+#define VERSION_L 7
 #define KEEP_ALIVE_TIME 120//seconds
 #define OR_BUFFER_SIZE 128
 
